@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>智能分拣装置｜实验室机械臂改造方案</title>
+<style>
+:root{--bg:#f3f5f4;--card:#fff;--ink:#17201f;--muted:#5d6967;--line:#d8dfdc;--teal:#08766e;--tealbg:#e1f0ed;--amber:#8d4e14;--amberbg:#fff1dc;--red:#a33b30;--redbg:#fbe9e6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.75 "Microsoft YaHei","PingFang SC",sans-serif}main{max-width:1100px;margin:0 auto;padding:34px 24px 72px}header{border-bottom:2px solid var(--ink);padding:12px 0 24px;margin-bottom:28px}.eyebrow{color:var(--teal);font:600 12px/1.4 Consolas,monospace;letter-spacing:.08em}h1{font-size:34px;line-height:1.25;margin:12px 0}h2{font-size:23px;margin:0 0 12px}h3{font-size:17px;margin:24px 0 8px}.lead{font-size:17px;color:var(--muted);max-width:78ch}.meta{font-size:12px;color:var(--muted);margin-top:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px 24px;margin:18px 0}.callout{border-left:4px solid var(--teal);background:var(--tealbg);padding:16px 18px;border-radius:4px;margin:16px 0}.warn{border-left-color:var(--amber);background:var(--amberbg)}.risk{border-left-color:var(--red);background:var(--redbg)}p{margin:8px 0 12px;max-width:90ch}ul,ol{padding-left:22px}li{margin:5px 0}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;margin:14px 0}table{border-collapse:collapse;width:100%;min-width:700px;background:white;font-size:13.5px}th{background:#eaf0ed;text-align:left;color:#46534f;font-size:12px}td,th{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}tr:last-child td{border-bottom:0}.tag{display:inline-block;border-radius:20px;background:var(--tealbg);color:var(--teal);padding:1px 9px;font-size:12px;font-weight:600}.tag.warn{background:var(--amberbg);color:var(--amber)}code{background:#edf0ee;border-radius:4px;padding:1px 5px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.tile{background:#f8faf9;border:1px solid var(--line);border-radius:8px;padding:14px 16px}.tile b{color:var(--teal)}.diagram{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;overflow:auto}.diagram svg{display:block;width:100%;min-width:620px;height:auto}.small{font-size:12.5px;color:var(--muted)}a{color:#096e68}footer{border-top:1px solid var(--line);margin-top:34px;padding-top:16px;color:var(--muted);font-size:12px}
+@media(max-width:720px){main{padding:20px 14px 48px}h1{font-size:27px}.card{padding:17px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<header>
+  <div class="eyebrow">2027 中国大学生工程实践与创新能力大赛 · 智能+工程创新赛道 · 智能分拣</div>
+  <h1>实验室机械臂改造技术方案</h1>
+  <p class="lead">优先复用照片中的桌面机械臂及原厂控制器，把自制分拣托盘、六个储物盒、机器视觉、机载显示和单电池供电集成为一台完整装置。照片中的型号高度疑似 DOBOT Magician；型号和附件未核实前，以下机械臂参数仅作为设计参考。</p>
+  <div class="meta">方案版本 v3 · 2026-09-27 · 参数待实验室实物核对 · 规则以赛事最新发布稿为准</div>
+</header>
+
+<section class="card">
+  <h2>先给结论</h2>
+  <p><span class="tag">技术上可做</span> 如果器材确为 DOBOT Magician，公开规格显示它有 4 轴、320mm 最大工作半径、500g 负载、±0.2mm 重复定位精度、158×158mm 底座和 12V/6.5A 供电。以它代替自制 XY 龙门，可以省掉一套运动机构、步进驱动和运动控制开发。<a href="https://www.dobot-robots.com/products/education/magician.html">参数来源：DOBOT Magician 官方产品页</a></p>
+  <p><span class="tag warn">先核验两个门槛</span> ① 机械臂本体、相机、屏幕和全部结构能否放进 350×350×450mm；② 赛事是否接受实验室已有的成品机械臂作为执行部件。规则要求自主设计分拣装置机械部分、非标件自主制造且不得购买成品套件拼装；建议将机械臂说明为实验室既有执行器，其余结构由团队设计制造，并请指导老师向赛事组确认。</p>
+  <div class="callout warn"><b>照片无法确认：</b>机械臂铭牌、Magician / Magician Lite 具体型号、控制器版本、末端夹爪/吸盘型号、气泵及电源参数。这些会改变工作空间、SDK、电气接线和抓取方案。先按文末清单调研，再冻结采购。</div>
+</section>
+
+<section class="card">
+  <h2>1. 比赛约束转成设计要求</h2>
+  <div class="table-wrap"><table><thead><tr><th>赛项约束</th><th>方案响应</th><th>验收重点</th></tr></thead><tbody>
+    <tr><td>整机不超过 350×350×450mm；比赛场地可用区域 500×500mm</td><td>整机目标包络 340×340×430mm；把 10mm/20mm 留作装配误差与凸出件余量</td><td>含机械臂工作时姿态、相机杆、屏幕、线缆弯曲半径、护罩和紧固件测量</td></tr>
+    <tr><td>六个独立储物盒，标号 1–6；托盘不小于 160×160mm，边沿不小于 10mm</td><td>定制 6 盒与 160×160mm 托盘；盒口概念尺寸 87–90mm，结构需留 4 件货物容量</td><td>用四个 40mm 量规/实物验证能完全放入，不能只看盒口面积</td></tr>
+    <tr><td>识别形状、颜色、文字/图像/二维码等表面信息；相同信息归同一盒</td><td>俯视视觉识别几何与颜色，二维码解码 + OCR；低置信度时复拍，不盲目合并类别</td><td>官方货物信息可能在侧面或底面，需确认标记位置和随机朝向</td></tr>
+    <tr><td>机载高亮屏显示序号、货物名称、图片、成功总数；完成显示后才处理下一件</td><td>7–10.1 英寸 HDMI 屏，亮度目标 ≥500 nit；屏幕只显示，不用触摸操作</td><td>每件出盒后先更新完整信息并确认渲染，再发下一条机械臂指令</td></tr>
+    <tr><td>一键启动；启动后不触碰装置；单电源，比赛中不可换电</td><td>一个外置“启动”按钮；电池随整机固定，DC/DC 分路供电；关闭 Wi-Fi/蓝牙遥控</td><td>上电自检、低电量告警、按钮消抖、防二次启动、断线处理</td></tr>
+    <tr><td>超过 15 秒无动作或无本次分拣信息显示，本轮结束</td><td>状态机按件推进；运动异常也及时显示故障状态，内部目标 ≤8 秒/件</td><td>从机械动作和屏幕刷新两方面记录每件时间，不能把内部目标误写成官方总时限</td></tr>
+  </tbody></table></div>
+  <p class="small">依据：<a href="https://www.shiep.edu.cn/_upload/article/files/61/d5/340105744e3c9ee39242687d8129/0958691b-a187-48e7-a642-8440ce5b65c8.pdf">2027 智能+工程创新赛道命题与运行发布稿</a>。赛前再与组委会/本校确认发布稿版本。</p>
+</section>
+
+<section class="card">
+  <h2>2. 复用机械臂的平面布局</h2>
+  <p>概念上把机械臂底座放在后左角，六个盒子放后右侧，托盘放前左侧；底座中心到最远取放点约 280–300mm，低于 Magician 参考工作半径 320mm。这个坐标布局能放进 350mm 方形范围，也避免托盘直接占住机械臂底座。</p>
+  <div class="diagram">
+    <svg viewBox="0 0 720 450" role="img" aria-label="350乘350毫米概念俯视图：左上角机械臂底座，右侧六个储物盒，左下方托盘，前右方显示屏；机械臂从底座覆盖托盘和盒子。">
+      <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#08766e"/></marker></defs>
+      <rect x="55" y="38" width="350" height="350" rx="7" fill="#fbfcfb" stroke="#34433f" stroke-width="2"/>
+      <text x="230" y="27" text-anchor="middle" fill="#17201f" font-size="14">整机平面目标 ≤ 350 × 350mm（所有突出件计入）</text>
+      <rect x="55" y="38" width="158" height="158" rx="6" fill="#263332"/>
+      <text x="134" y="105" text-anchor="middle" fill="white" font-size="15">实验室机械臂</text><text x="134" y="127" text-anchor="middle" fill="#d5e4df" font-size="12">底座参考 158×158</text>
+      <rect x="228" y="45" width="87" height="87" rx="4" fill="#e1f0ed" stroke="#08766e"/><rect x="315" y="45" width="87" height="87" rx="4" fill="#e1f0ed" stroke="#08766e"/>
+      <rect x="228" y="132" width="87" height="87" rx="4" fill="#e1f0ed" stroke="#08766e"/><rect x="315" y="132" width="87" height="87" rx="4" fill="#e1f0ed" stroke="#08766e"/>
+      <rect x="228" y="219" width="87" height="87" rx="4" fill="#e1f0ed" stroke="#08766e"/><rect x="315" y="219" width="87" height="87" rx="4" fill="#e1f0ed" stroke="#08766e"/>
+      <g fill="#08766e" font-size="12" text-anchor="middle"><text x="271" y="94">盒 1</text><text x="358" y="94">盒 2</text><text x="271" y="181">盒 3</text><text x="358" y="181">盒 4</text><text x="271" y="268">盒 5</text><text x="358" y="268">盒 6</text></g>
+      <rect x="55" y="228" width="160" height="160" rx="5" fill="#fff1dc" stroke="#aa7118" stroke-width="2"/><text x="135" y="300" text-anchor="middle" fill="#81520f" font-size="15">托盘</text><text x="135" y="323" text-anchor="middle" fill="#81520f" font-size="12">160×160mm</text><text x="135" y="344" text-anchor="middle" fill="#81520f" font-size="12">边沿 ≥10mm</text>
+      <path d="M134 115 Q95 200 132 305 M145 110 Q246 104 353 260" fill="none" stroke="#08766e" stroke-width="3" stroke-dasharray="7 5" marker-end="url(#arr)"/>
+      <rect x="228" y="321" width="174" height="50" rx="5" fill="#e9eef2" stroke="#758490"/><text x="315" y="343" text-anchor="middle" fill="#34434a" font-size="13">前侧显示屏（立装）</text><text x="315" y="361" text-anchor="middle" fill="#5d6967" font-size="11">电池 / 主控置于底板下</text>
+      <text x="464" y="90" fill="#08766e" font-size="14">上方结构</text><text x="464" y="119" fill="#17201f" font-size="13">相机 A：托盘取料区</text><text x="464" y="145" fill="#17201f" font-size="13">相机 B：储物盒确认区</text><text x="464" y="171" fill="#17201f" font-size="13">必要时增加斜视复拍相机</text>
+      <text x="464" y="224" fill="#8d4e14" font-size="14">需 CAD / 实机确认</text><text x="464" y="251" fill="#17201f" font-size="13">工作扇区是否覆盖全部点</text><text x="464" y="277" fill="#17201f" font-size="13">最大高度 ≤450mm</text><text x="464" y="303" fill="#17201f" font-size="13">机械臂连杆摆动不越界</text>
+    </svg>
+  </div>
+  <div class="callout risk"><b>边界条件：</b>Magician 手册图示工作区顶部视角为半圆扇区，不能只用“320mm半径”判断可达。布局要按机械臂朝向旋转，使托盘与六盒落在同一可达扇区，并逐点运行仿真/低速示教。还要验证运行时机械臂连杆本身不越过 350×350 边界；若需要把机械臂架高，整机高度仍不得超过 450mm。</div>
+</section>
+
+<section class="card">
+  <h2>3. 控制与芯片选型</h2>
+  <div class="table-wrap"><table><thead><tr><th>层级</th><th>推荐选型</th><th>职责与理由</th><th>调研/采购门槛</th></tr></thead><tbody>
+    <tr><td>机械臂与驱动</td><td>沿用原机械臂、原厂控制器和原厂末端接口</td><td>控制器内部完成关节伺服和轨迹插补；上位机不直连电机，不另加步进驱动板</td><td>核对型号、固件、工作空间、工具控制指令、USB协议和错误码</td></tr>
+    <tr><td>主控芯片/计算机</td><td><b>Intel N100 x86-64 迷你主机</b>，8GB RAM、128GB SSD、HDMI、USB3，优先原生 12V 输入；Windows 11 x64</td><td>运行相机、OpenCV、二维码/OCR、机械臂官方SDK和显示UI。N100 为4核/4线程、6W TDP、带 HDMI 输出；x86 更适合核验官方 Windows SDK，不把核心控制押在未确认的 ARM64 兼容性上。<a href="https://www.intel.com/content/www/us/en/products/sku/231803/intel-processor-n100-6m-cache-up-to-3-40-ghz/specifications.html">Intel规格</a></td><td>先在实验室电脑验证官方SDK/协议可用，再买固定主机；不依赖联网、Wi-Fi或蓝牙</td></tr>
+    <tr><td>按钮与传感器接口</td><td><b>ESP32-S3-WROOM-1</b> 开发板，Wi-Fi/蓝牙关闭；GPIO 输入经光耦/电平转换</td><td>读取唯一“启动”按钮、门/物料光电传感器、电源状态；向N100发送USB串口状态。它不产生机械臂电机脉冲</td><td>确认原控制器 STOP / IO 接口的电压和接线方式；未经确认不直接接12V信号</td></tr>
+    <tr><td>视觉算法</td><td>OpenCV 4 + ZXing/OpenCV QR解码 + Tesseract OCR；疑难图案再评估轻量 ONNX 模型</td><td>固定光照下先用轮廓/几何、颜色阈值和二维码/文字；可解释、可现场调参，CPU足够跑静态件识别</td><td>用实际40mm样件、污渍和随机朝向测读码率；先不采购NPU</td></tr>
+    <tr><td>相机</td><td>USB3 UVC 2MP以上手动曝光相机×2；托盘俯视、储物盒俯视；按需增加斜视相机</td><td>分开成像避免一个画面兼顾全台后字符太小；固定镜头、锁曝光/白平衡、漫射补光</td><td>确认视场尺寸、像素/毫米、镜头接口、最近对焦距离、低照/反光效果、Linux/Windows驱动</td></tr>
+    <tr><td>显示</td><td>7–10.1英寸 HDMI IPS，高亮目标≥500 nit，非触摸屏</td><td>由N100显示序号、名称、该件图片、成功总数；每件落盒后完成刷新才进入下一件</td><td>核对亮度实值、分辨率、输入电压/电流、日光可读性、安装外形</td></tr>
+  </tbody></table></div>
+  <p><b>关键选型原则：</b>不替换机械臂原控制器，不用 ESP32-S3 代替机械臂伺服控制。DOBOT官方提供 USB/通信协议和二次开发资料，但不同型号/固件/SDK平台可能有差别，固定 N100 前先做“连接、回原点、坐标移动、夹爪/气泵控制、动作完成反馈、急停/停止”六项兼容性验证。<a href="https://www.dobot.cn/service/download-center?lang=cn">DOBOT下载中心</a></p>
+</section>
+
+<section class="card">
+  <h2>4. 抓取、识别与单件流程</h2>
+  <div class="grid">
+    <div class="tile"><b>夹具</b><br>优先复用照片中的原厂气动夹爪，给夹爪加可换的薄型软质V形指垫，减少挤压、遮挡和碰邻件。若夹爪有效开口覆盖不了40mm货物，再试原厂20mm吸盘；球锥、薄壁和贴码面需要做实物抓取矩阵。</div>
+    <div class="tile"><b>确认抓取成功</b><br>先读原夹具是否有夹持/真空反馈。没有反馈时增加夹具在位光电或真空压力传感器；相机对抓取前后托盘做差分，双重确认，避免假抓取后空跑。</div>
+    <div class="tile"><b>分组</b><br>类别键为“形状 + 颜色 + 可读表面信息”。二维码先解码；文字OCR规范化后比较；外形结合轮廓、角点、长宽比和多视角。类别编号稳定映射到六盒。</div>
+    <div class="tile"><b>复拍</b><br>货物进入托盘后先俯拍；表面标记被遮挡或置信度低时，机械臂拿起并转动货物，斜视相机复拍。需确认赛事标记是否可能在底面；若是，现有夹具和4轴结构未必能读到底面，必须增加翻面工位或向赛事确认规则。</div>
+  </div>
+  <h3>运行状态机</h3>
+  <ol><li>调试阶段完成相机标定、货物类别/盒位映射、低速路径和供电检查。</li><li>裁判发令后只按一次外置“启动”；主机立即显示“正在分拣”，锁定无线和调参入口。</li><li>托盘成像、识别全部货物、验证类别数≤6；异常时及时显示，不开始危险动作。</li><li>按避碰且距离短的顺序逐件抓取；动作由原厂控制器执行，上位机等待动作完成/错误返回。</li><li>放入对应盒，夹具释放后由相机/传感器确认；屏幕显示序号、名称、图片、成功总数。</li><li>确认显示完成后处理下一件；失败重试一次，仍失败则显示错误并安全停止或继续未完成件（由规则和实测确定）。</li></ol>
+  <p class="small">运行目标先定为单件平均≤8秒、12件≤120秒；这只是项目内部目标。官方发布稿明确超过15秒无动作或未显示本次信息会结束本轮，因此软件要对长动作、通信卡住和UI阻塞设超时与状态提示。</p>
+</section>
+
+<section class="card">
+  <h2>5. 单电源与电气方案</h2>
+  <p>公开 Magician 参数为 12V/6.5A、最大功耗78W。建议原型验证后采用一组固定安装的 <b>4串 LiFePO₄ 12.8V、15Ah（约192Wh）</b>电池，BMS连续放电≥20A、峰值≥30A；经宽输入 DC/DC 形成稳定 12V 母线。机械臂单独使用稳压 12V/10A 支路，N100/屏幕按铭牌分别供电，摄像头/ESP32走受保护的5V支路；每路独立保险丝和反接保护。禁止比赛中接实验室交流适配器替代电池。</p>
+  <div class="callout warn">电池容量是初始规格，不是最终定值。公开最大功耗不等于本机实测值；需把机械臂加速、夹爪气泵、主机、屏幕和灯同时运行，记录峰值电流与完整调试/比赛时长，再决定15Ah是否够用及DC/DC余量。</div>
+  <p>总电源建议：主电池 → 总保险/总开关 → 稳压12V母线 → 机械臂控制器、N100、屏幕、光源分支；另一路 DC/DC 5V → ESP32-S3 / USB外设。摄像头由主机USB供电前，要核对主机USB电流和总线功耗。接线端子、保险、线径按实测峰值与长度选型。</p>
+</section>
+
+<section class="card">
+  <h2>6. 优先复用清单与新增器材</h2>
+  <div class="table-wrap"><table><thead><tr><th>类别</th><th>优先复用</th><th>可能新增</th></tr></thead><tbody>
+    <tr><td>执行机构</td><td>桌面机械臂、原控制器、原厂电源、现有夹爪/吸盘/气泵</td><td>薄型软指垫、末端转接板、限位/防碰支架</td></tr>
+    <tr><td>视觉</td><td>实验室工业相机、镜头、光源、标定板</td><td>顶视相机×2、斜视补拍相机（按标签面决定）、漫射罩</td></tr>
+    <tr><td>控制显示</td><td>现有 x86主机、HDMI屏、线材</td><td>固定安装N100主机、7–10.1英寸≥500nit显示屏、ESP32-S3和光耦输入板</td></tr>
+    <tr><td>机械与供电</td><td>3D打印机、激光切割机、现有合规电池</td><td>自制托盘、六个盒体、相机框架、底板、LiFePO₄电池包、DC/DC、保险丝和线束</td></tr>
+  </tbody></table></div>
+</section>
+
+<section class="card">
+  <h2>7. 你去实验室调研的参数清单</h2>
+  <p>建议优先拍铭牌和接口，再量尺寸/做软件验证。把照片、手册PDF、实测数据一起带回来，我可以据此把本方案定成可出图和可采购版本。</p>
+  <div class="table-wrap"><table><thead><tr><th>优先级</th><th>要查什么</th><th>具体参数 / 证据</th><th>为什么需要</th></tr></thead><tbody>
+    <tr><td>P0</td><td>机械臂身份</td><td>底座铭牌正反面；完整型号（Magician / Magician Lite / 版本）；序列号可遮后四位；控制器型号、固件版本</td><td>确认公开参数和SDK是否适用；Lite与标准版不能按同一工作范围设计</td></tr>
+    <tr><td>P0</td><td>外形和可达空间</td><td>底座宽/深/高；从桌面到最高固定件高度；J1–J4角度范围；X/Y/Z可达范围；腕部工具中心点位置；所有轴回零姿态照片</td><td>必须在350×350×450mm内，同时证明托盘和六盒都在可达半圆扇区</td></tr>
+    <tr><td>P0</td><td>运行边界</td><td>机械臂连接杆最大摆动外包络；能否设软件软限位；是否有机械限位；最低安全速度和碰撞/过流报警方式</td><td>保证设备运行时连杆不越出赛规尺寸、不撞相机/储物盒</td></tr>
+    <tr><td>P0</td><td>控制器/SDK</td><td>USB接口类型、COM口名、协议/SDK版本、支持的Windows/Linux与位数；动作“已完成”反馈、错误码、命令队列；控制器STOP接口及电气图</td><td>确定N100系统和程序接口；状态机必须知道动作完成，通信断开时需安全停止</td></tr>
+    <tr><td>P0</td><td>供电</td><td>原适配器输出电压、电流、极性；控制器/机械臂实测待机与运动峰值电流；夹爪/气泵是否另供电及峰值；允许输入电压范围</td><td>确定电池、DC/DC、BMS、保险丝和线径，避免电压跌落重启</td></tr>
+    <tr><td>P0</td><td>末端夹具</td><td>夹爪型号、最大开口、行程、夹紧力；吸盘直径、真空度、泵/阀型号；快换结构、末端总重；能否控制夹紧/释放并读回状态</td><td>判断40mm球/锥/薄壁/棱柱的抓取方式和负载余量</td></tr>
+    <tr><td>P0</td><td>比赛货物信息</td><td>已知样件照片和三视图；单件最大尺寸；标签可能在哪些面；二维码/文字最小尺寸；是否有底面标记；总类别最大数</td><td>决定相机数量、镜头视场、复拍机构和是否需要翻面</td></tr>
+    <tr><td>P1</td><td>其他现有器材</td><td>相机品牌/型号/分辨率/接口/镜头；屏幕型号/亮度/输入电压；电池规格/BMS；工控机/笔记本型号；光源和标定板</td><td>优先复用，避免重复采购</td></tr>
+    <tr><td>P1</td><td>夹具传感器</td><td>真空压力开关/压力传感器、夹爪到位开关、光电传感器型号和电压；控制器I/O输入范围</td><td>用传感器确认抓到/放下，避免只靠运动命令计成功</td></tr>
+    <tr><td>P1</td><td>加工能力和赛务</td><td>3D打印机有效尺寸、材料、精度；激光切割尺寸；校赛时间；指导老师/赛事对复用商业机械臂的答复</td><td>决定结构材料、排期和资格风险</td></tr>
+  </tbody></table></div>
+  <div class="callout"><b>现场最有效的六项小实验：</b>① 用尺测机械臂静态高度和底座；② 从USB连电脑并记录设备/固件；③ 低速走托盘四角和六个盒中心并保存XYZ；④ 测夹爪抓取四种代表货物各20次；⑤ 连续跑12件记录每件时间与峰值电流；⑥ 用机械臂原控制器/SDK确认运动完成、夹具控制和STOP反馈。</div>
+</section>
+
+<section class="card">
+  <h2>8. 进度门槛与风险控制</h2>
+  <div class="table-wrap"><table><thead><tr><th>阶段</th><th>交付</th><th>通过条件</th></tr></thead><tbody>
+    <tr><td>器材调查</td><td>铭牌、固件/SDK、工作空间和供电参数</td><td>型号确定；赛事接受既有机械臂的资格问题得到老师/组委会答复</td></tr>
+    <tr><td>布局与可达性</td><td>350×350×450mm CAD包络、六盒/托盘坐标表、低速轨迹</td><td>所有取放点可达；连杆、相机、护罩不碰撞；所有部件不越界</td></tr>
+    <tr><td>视觉与夹具</td><td>光照固定、颜色/形状/文字二维码分类程序</td><td>至少12件/6类样件，随机摆放和污渍下分类准确率≥98%，低置信度复拍</td></tr>
+    <tr><td>系统联调</td><td>按钮、电池、主机、机械臂、相机、显示一体化</td><td>12件全流程自动完成；每件显示正确且顺序符合规则；无人工干预</td></tr>
+    <tr><td>鲁棒性回归</td><td>随机摆放50轮记录表</td><td>整轮完成率≥90%；零掉件出界；电池满电跑完调试和两次正式运行仍有余量</td></tr>
+  </tbody></table></div>
+  <p><b>最大风险：</b>①赛事不接受使用成品机械臂；②工作高度/运行扫掠超尺寸；③货物底面或侧面二维码无法读取；④机械臂工具和泵导致供电峰值超出电池/DC/DC能力；⑤旧SDK无法在新操作系统稳定工作。按P0调查顺序先排除这些问题，再下单。</p>
+</section>
+
+<footer>
+  机械臂公开规格参考：<a href="https://www.dobot-robots.com/products/education/magician.html">DOBOT Magician 官方产品页</a>；通信与SDK：<a href="https://www.dobot.cn/service/download-center?lang=cn">DOBOT官方中文下载中心</a>。公开参考值为4轴、320mm最大工作半径、±0.2mm重复定位、500g负载、158×158mm底座、12V/6.5A、最大78W；最终以实验室铭牌、对应型号手册和实测为准。赛项规则依据：<a href="https://www.shiep.edu.cn/_upload/article/files/61/d5/340105744e3c9ee39242687d8129/0958691b-a187-48e7-a642-8440ce5b65c8.pdf">2027智能+工程创新赛道命题与运行发布稿</a>。
+</footer>
+</main></body></html>

@@ -1,0 +1,63 @@
+# ============================================================
+#  ★ 红线：非本团队的代码一律不得入库
+#  实验室那套平台无 LICENSE（= 保留所有权利），且内嵌 AGPL-3.0 / GPL-3.0
+#  及专有 SDK。私有仓库同样属于「向第三方分发」。详见 README.md 红线 3。
+# ============================================================
+code/
+vendor/
+third_party/
+**/gxipy/
+**/haikangSDK/
+**/MvImport/
+**/DobotDll*/
+**/ultralytics/
+**/sdk/
+
+# 模型权重 / 数据集 / 大文件 —— 走网盘
+*.pt
+*.pth
+*.onnx
+*.engine
+*.trt
+*.h5
+*.pb
+*.tflite
+*.whl
+*.deb
+*.tar.gz
+*.zip
+*.7z
+*.rar
+*.mp4
+*.avi
+*.mkv
+*.bmp
+datasets/
+weights/
+runs/
+
+# 密钥 / 凭据 —— 绝不入库
+*.pem
+*.key
+*.ppk
+id_rsa*
+id_ed25519*
+*.credentials
+.env
+.env.*
+
+# 排查用临时脚本
+box_*.sh
+*_recon*.sh
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+__pycache__/
+*.pyc
+*.pyo
+.idea/
+.vscode/
+*.swp
+~$*

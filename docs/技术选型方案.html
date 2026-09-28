@@ -1,0 +1,1064 @@
+<meta charset="utf-8">
+<title>智能分拣装置技术方案</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+
+<style>
+:root{
+  --ground:#F4F6F4;
+  --surface:#FFFFFF;
+  --surface-2:#EAEFEB;
+  --ink:#15191A;
+  --ink-2:#555E5F;
+  --ink-3:#7E8889;
+  --rule:#DBE1DD;
+  --rule-strong:#C0C9C4;
+  --accent:#0C6B66;
+  --accent-soft:#DCEAE7;
+  --on-accent:#FFFFFF;
+  --warn:#A0401A;
+  --warn-soft:#F7E5DA;
+  --ok:#3A6B2B;
+  --ok-soft:#E2EBDB;
+  --steel:#B9C2BD;
+  --shadow:0 1px 2px rgba(18,28,26,.05),0 10px 28px -20px rgba(18,28,26,.35);
+
+  --sans:"IBM Plex Sans","PingFang SC","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1312;
+    --surface:#171C1B;
+    --surface-2:#1F2524;
+    --ink:#E7EBE9;
+    --ink-2:#A3ADAB;
+    --ink-3:#7A8583;
+    --rule:#293130;
+    --rule-strong:#3B4544;
+    --accent:#58BFB5;
+    --accent-soft:#15302E;
+    --on-accent:#08100F;
+    --warn:#E0965F;
+    --warn-soft:#33221A;
+    --ok:#8DC772;
+    --ok-soft:#1D2A18;
+    --steel:#3C4644;
+    --shadow:0 1px 2px rgba(0,0,0,.45),0 12px 32px -20px rgba(0,0,0,.85);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1312;
+  --surface:#171C1B;
+  --surface-2:#1F2524;
+  --ink:#E7EBE9;
+  --ink-2:#A3ADAB;
+  --ink-3:#7A8583;
+  --rule:#293130;
+  --rule-strong:#3B4544;
+  --accent:#58BFB5;
+  --accent-soft:#15302E;
+  --on-accent:#08100F;
+  --warn:#E0965F;
+  --warn-soft:#33221A;
+  --ok:#8DC772;
+  --ok-soft:#1D2A18;
+  --steel:#3C4644;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 12px 32px -20px rgba(0,0,0,.85);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.72;
+  padding-inline:20px;
+  padding-block:30px 90px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1140px;margin-inline:auto}
+
+/* ---- header ---- */
+.masthead{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:34px}
+.eyebrow{
+  font-family:var(--mono);font-size:11px;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
+  display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:14px;
+}
+.eyebrow span{color:var(--ink-3)}
+h1{
+  font-size:clamp(26px,4.4vw,40px);line-height:1.16;font-weight:700;
+  letter-spacing:-.015em;text-wrap:balance;margin:0 0 14px;
+}
+.deck{color:var(--ink-2);max-width:64ch;margin:0 0 20px;font-size:16px}
+.byline{
+  display:flex;flex-wrap:wrap;gap:8px 30px;
+  font-family:var(--mono);font-size:12px;color:var(--ink-2);
+}
+.byline b{color:var(--ink);font-weight:600}
+
+/* ---- layout ---- */
+.layout{display:grid;grid-template-columns:186px minmax(0,1fr);gap:52px;align-items:start}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px)}
+.toc h2{
+  font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 12px;
+}
+.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.toc a{
+  display:flex;gap:9px;padding:5px 0;color:var(--ink-2);text-decoration:none;
+  font-size:13px;line-height:1.4;border-bottom:1px solid transparent;
+}
+.toc a:hover{color:var(--accent)}
+.toc a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+.toc .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);flex:none;padding-top:1px}
+
+/* ---- sections ---- */
+section{margin-bottom:56px;scroll-margin-top:24px}
+.shead{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+.snum{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);flex:none}
+h2.sh{
+  font-size:clamp(19px,2.6vw,25px);font-weight:600;letter-spacing:-.01em;
+  text-wrap:balance;margin:0;
+}
+.sub{color:var(--ink-2);font-size:14px;margin:0 0 20px;padding-left:37px;max-width:70ch}
+p{max-width:70ch;margin:0 0 14px}
+strong{font-weight:600}
+em{font-style:normal;color:var(--accent);font-weight:600}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+a{color:var(--accent)}
+h3{font-size:15px;font-weight:600;margin:30px 0 10px;letter-spacing:0}
+h3:first-of-type{margin-top:22px}
+
+/* ---- tables ---- */
+.tscroll{overflow-x:auto;margin:0 0 20px;border:1px solid var(--rule);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:540px;font-size:13.5px}
+th{
+  text-align:left;font-family:var(--mono);font-size:10.5px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);
+  padding:11px 14px;background:var(--surface-2);border-bottom:1px solid var(--rule-strong);
+  white-space:nowrap;
+}
+td{padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.6}
+tbody tr:last-child td{border-bottom:none}
+td.num,th.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+td.mono{font-family:var(--mono);font-size:12.5px}
+tr.total td{background:var(--surface-2);font-weight:600}
+.pill{
+  display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:600;
+  padding:2px 7px;border-radius:99px;white-space:nowrap;
+}
+.pill.p0{background:var(--accent-soft);color:var(--accent)}
+.pill.p1{background:var(--surface-2);color:var(--ink-2)}
+.pill.p2{background:var(--warn-soft);color:var(--warn)}
+.pill.no{background:var(--warn-soft);color:var(--warn)}
+.pill.yes{background:var(--ok-soft);color:var(--ok)}
+
+/* ---- decision summary ---- */
+.decide{
+  background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--accent);
+  border-radius:8px;box-shadow:var(--shadow);margin:0 0 24px;
+}
+.decide .tscroll{border:none;border-radius:0;box-shadow:none;margin:0}
+.decide table{min-width:620px}
+.decide td:first-child{font-weight:600;white-space:nowrap}
+
+/* ---- callout ---- */
+.note{
+  background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
+  padding:14px 18px;margin:0 0 20px;font-size:13.5px;color:var(--ink);
+}
+.note b{color:var(--warn)}
+.note p{max-width:none;margin:0}
+.note p + p{margin-top:8px}
+
+/* ---- figures ---- */
+figure{margin:24px 0 26px}
+.figbox{
+  border:1px solid var(--rule);border-radius:8px;background:var(--surface);
+  overflow-x:auto;padding:18px 16px;
+}
+.figbox svg{display:block;width:100%;min-width:580px;height:auto;max-width:100%}
+figcaption{
+  font-size:12.5px;color:var(--ink-2);margin-top:11px;max-width:78ch;
+  padding-left:1px;line-height:1.62;
+}
+figcaption b{color:var(--ink);font-weight:600}
+
+/* svg primitives */
+.dg{color:var(--ink-2)}
+.dgb{fill:var(--surface-2);stroke:var(--rule-strong);stroke-width:1.4}
+.dgb-acc{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.6}
+.dgt{fill:var(--ink);font-family:var(--sans);font-size:13px;font-weight:600}
+.dgs{fill:var(--ink-2);font-family:var(--mono);font-size:10.5px}
+.dgl{fill:var(--ink-3);font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.13em}
+.dgd{fill:var(--ink-2);font-family:var(--mono);font-size:10.5px}
+.dga{stroke:var(--ink-3);stroke-width:1.4;fill:none}
+.dga-acc{stroke:var(--accent);stroke-width:2;fill:none}
+.dga-dash{stroke:var(--ink-3);stroke-width:1.3;fill:none;stroke-dasharray:4 4}
+.dg-sl{stroke:var(--rule-strong);stroke-width:1}
+.dg-au{stroke:var(--accent);stroke-width:1.5;fill:none}
+.dg-au-f{fill:var(--accent)}
+.mk-ink path{fill:var(--ink-3)}
+.mk-acc path{fill:var(--accent)}
+/* fill/stroke utilities — declared last so they beat .dgt/.dgs/.dgd above */
+.f-acc{fill:var(--accent)}
+.f-onacc{fill:var(--on-accent)}
+.f-surf2{fill:var(--surface-2)}
+.f-steel{fill:var(--steel)}
+.f-none{fill:none}
+.s-rule{stroke:var(--rule-strong)}
+.s-acc{stroke:var(--accent)}
+
+/* ---- bar cell (cycle budget) ---- */
+.bar{display:flex;align-items:center;gap:9px;min-width:180px}
+.bar i{display:block;height:9px;border-radius:2px;background:var(--accent);flex:none}
+.bar.accentless i{background:var(--rule-strong)}
+
+/* ---- asks ---- */
+.asks{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px}
+.asks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:12px;align-items:start}
+.asks .box{
+  width:19px;height:19px;border:1.6px solid var(--rule-strong);border-radius:4px;margin-top:3px;
+}
+.asks b{display:block;font-weight:600}
+
+/* ---- footer ---- */
+footer{
+  border-top:1px solid var(--rule);margin-top:58px;padding-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--ink-3);line-height:1.8;
+}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:0}
+  .toc{display:none}
+  .sub{padding-left:0}
+}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div class="eyebrow">
+    <span>2027 中国大学生工程实践与创新能力大赛</span>
+    <span>智能+工程创新赛道 · 智能分拣赛项</span>
+  </div>
+  <h1>智能分拣装置技术方案</h1>
+  <p class="deck">为什么选智能分拣、机械与控制系统怎么定、关键器件为什么是这些、要花多少钱、以及进度如何排布。</p>
+  <div class="byline">
+    <div>提交人 <b>蒋玉月</b></div>
+    <div>版本 <b>v2.1 · 尺寸包络复核</b></div>
+    <div>日期 <b>2026-09-23</b></div>
+    <div>依据 <b>2027 智能+赛道发布稿 + 命题解析</b></div>
+  </div>
+</header>
+
+<div class="layout">
+
+<nav class="toc" aria-label="目录">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span><span>规则约束与设计公理</span></a></li>
+    <li><a href="#s2"><span class="n">02</span><span>赛项选择论证</span></a></li>
+    <li><a href="#s3"><span class="n">03</span><span>总体方案</span></a></li>
+    <li><a href="#s4"><span class="n">04</span><span>主控选型论证</span></a></li>
+    <li><a href="#s5"><span class="n">05</span><span>子系统选型</span></a></li>
+    <li><a href="#s6"><span class="n">06</span><span>关键技术方案</span></a></li>
+    <li><a href="#s7"><span class="n">07</span><span>BOM 与预算</span></a></li>
+    <li><a href="#s8"><span class="n">08</span><span>进度排期</span></a></li>
+    <li><a href="#s9"><span class="n">09</span><span>风险与对策</span></a></li>
+    <li><a href="#s10"><span class="n">10</span><span>需要老师支持</span></a></li>
+    <li><a href="#sA"><span class="n">附录</span><span>SG2002 路线核查</span></a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ============ 摘要 ============ -->
+<section id="s0">
+  <div class="shead"><span class="snum">摘要</span><h2 class="sh">六项已定型决策</h2></div>
+  <p class="sub">老师只需过一遍这张表，细节都在后面的章节里。</p>
+  <div class="decide">
+    <div class="tscroll">
+      <table>
+        <thead><tr><th>决策项</th><th>选定方案</th><th>关键理由</th></tr></thead>
+        <tbody>
+          <tr><td>参赛赛项</td><td>智能分拣</td><td>桌面设备便于反复测试；分类必须同时匹配形状、颜色和表面信息</td></tr>
+          <tr><td>机械构型</td><td>紧凑直角坐标龙门 XY+Z<br>目标外形不超 350 × 350 × 450mm；设计目标 340 × 340 × 430mm</td><td>托盘按 160 × 160mm 起步；六盒 2 列 × 3 行，先做尺寸包络 CAD 再采购</td></tr>
+          <tr><td>控制架构</td><td>Raspberry Pi 4B（Linux）做视觉与显示<br>+ ESP32-S3 做实时运动</td><td>规则要求机载高亮屏，SG2002 无 HDMI 通路；Linux 非实时，不能直接发步进脉冲</td></tr>
+          <tr><td>末端执行器</td><td>浮动吸盘 + 真空压力检测<br>预留旋转复拍接口</td><td>先用实物验证各类货物吸取；无法稳定吸取的类别再选夹爪或专用吸头</td></tr>
+          <tr><td>识别路线</td><td>几何/颜色 + OCR/二维码<br>不预设货物类别表</td><td>先用传统视觉；表面信息纳入分类键，遇到遮挡或不可读要复拍/报错</td></tr>
+          <tr><td>预算 / 进度</td><td>已标价项加预留 ≥ ¥3,082<br>另加驱动与多视角待询价</td><td>当前金额不含改版增量；以尺寸与识别验证通过为采购门槛</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="note">
+    <p><b>先按发布稿约束设计，赛事组织方的最新通知仍需复核。</b></p>
+    <p>装置外形不得超过<strong>350 × 350 × 450mm</strong>；托盘不小于<strong>160 × 160mm</strong>，且有不小于 10mm 的边缘。分拣需匹配货物的<strong>形状、颜色及表面信息</strong>。计时方面，已查到的发布稿规定超过 15 秒无动作或未显示本次信息则本轮结束；没有据此认定一个固定总时长。第 06 节的 90 秒是内部工程目标，不是规则上限。</p>
+  </div>
+</section>
+
+<!-- ============ 01 ============ -->
+<section id="s1">
+  <div class="shead"><span class="snum">01</span><h2 class="sh">规则约束与设计公理</h2></div>
+  <p class="sub">选型不是偏好问题。下面四条是从规则原文反推出来的硬约束，后面每一节都服务于它们。</p>
+
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>规则原文要点</th><th>反推出的设计公理</th><th>对选型的影响</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>六个独立储物盒；形状、颜色<strong>及表面信息</strong>一致的货物必须同盒。单件 2 分，同组多件每件 5 分</td>
+          <td>先分清所有类别，再把每类货物稳定放入同一盒；盒内可容纳最多 4 件</td>
+          <td>盒口和落点仍需留容差；用 40mm 货物量规验证容量，不能假设“大喇叭口”消除定位误差</td>
+        </tr>
+        <tr>
+          <td>"将一件货物分拣至储物盒<strong>和</strong>分拣信息显示后"才能分拣下一件</td>
+          <td>显示刷新是节拍瓶颈，不能与运动串行阻塞</td>
+          <td>屏幕走 HDMI 不经 SPI；图片预解码 + 双缓冲渲染</td>
+        </tr>
+        <tr>
+          <td>货物表面有污渍/缺陷图形、文字、二维码等信息；决赛货物现场公布</td>
+          <td>分类键至少包含<strong>形状 + 颜色 + 可读表面信息</strong>，未知类也要可现场建档</td>
+          <td>几何视觉配 OCR/二维码解码；信息不可见或不确定时复拍，不可仅凭颜色合并</td>
+        </tr>
+        <tr>
+          <td>决赛须用现场提供的设备、材料、软件平台完成任务，<strong>且在后续任务中应用</strong></td>
+          <td>机械件必须模块化、可现场重制</td>
+          <td>夹爪、喇叭口、托盘边框全部走 3D 打印，携带 STEP 源文件</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>运行约束还包括：只有一个明确标记的“启动”按钮；开始后不得触碰装置或货物；货物必须完全进入储物盒，部分进入记 0 分；分拣完一件并显示对应信息后才能进行下一件。成绩设计应优先避免误分、掉件和漏显示。</p>
+</section>
+
+<!-- ============ 02 ============ -->
+<section id="s2">
+  <div class="shead"><span class="snum">02</span><h2 class="sh">赛项选择论证</h2></div>
+  <p class="sub">智能+赛道下设智能搬运、智能分拣、智能救援三个赛项，以下为横向对比。</p>
+
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>维度</th><th>智能搬运</th><th>智能分拣</th><th>智能救援</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>场地依赖</strong></td>
+          <td>2400mm 见方场地，含电动转盘、粗加工区、暂存区、行车区，调试须约场地</td>
+          <td><span class="pill yes">桌面级工位</span>整机 350mm 见方以内，一张桌角即可测</td>
+          <td>2400mm 见方对抗场地，需对手陪练</td>
+        </tr>
+        <tr>
+          <td><strong>定位导航</strong></td>
+          <td>须自主定位，投影越出车道立即停赛</td>
+          <td><span class="pill yes">不需要</span>相机固定在机架上</td>
+          <td>须高速移动、避障、越障</td>
+        </tr>
+        <tr>
+          <td><strong>评分特性</strong></td>
+          <td>连续精度分：同心环 1 环 15 分递减至 6 环 1 分，另需码垛</td>
+          <td><span class="pill yes">近似二值</span>分类正确即 5 分/件</td>
+          <td>对抗计件，方差最大</td>
+        </tr>
+        <tr>
+          <td><strong>机械难度</strong></td>
+          <td>极高：抓回转体、车上载 3 件、旋转转盘上取件、精准放环、码垛</td>
+          <td>中等：2~3 轴 + 吸盘</td>
+          <td>高：禁止机械臂抓取、禁止放车上，只能推铲</td>
+        </tr>
+        <tr>
+          <td><strong>可复现性</strong></td>
+          <td>中，须反复上场地刷分</td>
+          <td><span class="pill yes">高</span>同一盘货物可无限次重跑</td>
+          <td>低，对手行为不可控</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>为什么排除搬运</h3>
+  <p>搬运的分数是<strong>落点精度的连续函数</strong>——1 环 15 分、6 环 1 分，要把成绩做上去只能靠几十次上场地迭代，投入产出比明显低于分拣。此外它还要叠加三座山：电动转盘（6~10 秒/转）上定时取件、车上同时载运 3 件、以及第二批物料的码垛。与之相对，分拣的<strong>分数不按环形精度递减</strong>，但货物必须完全进入正确储物盒；盒口、标定和落点容差仍需实测。</p>
+
+  <h3>为什么排除救援</h3>
+  <p>救援是双机对抗，且规则禁止机械臂抓取、禁止把目标放在车上——只能推或铲。结果高度依赖对手行为，无法在赛前通过迭代收敛，属于押注型赛项，风险不可控。</p>
+</section>
+
+<!-- ============ 03 ============ -->
+<section id="s3">
+  <div class="shead"><span class="snum">03</span><h2 class="sh">总体方案</h2></div>
+  <p class="sub">紧凑直角坐标分拣机：托盘按 160 × 160mm 设计，六个储物盒按 2 列 × 3 行紧凑布置；视觉识别形状、颜色与表面信息，逐件取放并更新机载高亮屏。</p>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 840 480" role="img" aria-label="系统架构：UVC 相机以 USB 送入 Linux 主控，主控完成手眼标定、形状颜色识别、取件规划与显示渲染，并经 HDMI 驱动高亮屏；主控再经串口把坐标指令下发到 ESP32-S3 运动控制器，该链路为实时边界；控制器发 STEP/DIR 脉冲驱动 X/Y 闭环步进与 Z 轴，并以 GPIO 控制真空泵、电磁阀与压力开关回读；整套系统由机内 12V 锂电池组供电。">
+        <defs>
+          <marker id="arInk" class="mk-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z"/>
+          </marker>
+          <marker id="arAcc" class="mk-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z"/>
+          </marker>
+        </defs>
+        <g class="dg">
+          <!-- band labels -->
+          <text class="dgl" x="12" y="46">感知</text>
+          <text class="dgl" x="12" y="158">决策</text>
+          <text class="dgl" x="12" y="304">实时运动</text>
+          <text class="dgl" x="12" y="410">执行</text>
+
+          <!-- perception -->
+          <rect class="dgb" x="120" y="16" width="320" height="52" rx="6"/>
+          <text class="dgt" x="136" y="38">UVC 相机 · 1080P</text>
+          <text class="dgs" x="136" y="56">手动锁定曝光 / 白平衡 / 增益</text>
+
+          <!-- arrow P -> M -->
+          <line class="dga" x1="280" y1="68" x2="280" y2="100" marker-end="url(#arInk)"/>
+          <text class="dgd" x="292" y="90">原始帧</text>
+
+          <!-- main controller -->
+          <rect class="dgb" x="120" y="104" width="480" height="118" rx="6"/>
+          <text class="dgt" x="136" y="128">主控 · Raspberry Pi（Linux）</text>
+          <rect class="dgb" x="136" y="140" width="140" height="28" rx="4"/>
+          <text class="dgs" x="148" y="158">手眼标定</text>
+          <rect class="dgb" x="288" y="140" width="140" height="28" rx="4"/>
+          <text class="dgs" x="300" y="158">形状 · 颜色识别</text>
+          <rect class="dgb" x="440" y="140" width="144" height="28" rx="4"/>
+          <text class="dgs" x="452" y="158">取件顺序规划</text>
+          <rect class="dgb" x="136" y="178" width="140" height="28" rx="4"/>
+          <text class="dgs" x="148" y="196">显示渲染（双缓冲）</text>
+          <rect class="dgb" x="288" y="178" width="140" height="28" rx="4"/>
+          <text class="dgs" x="300" y="196">状态机 · 节拍调度</text>
+
+          <!-- display -->
+          <rect class="dgb" x="648" y="104" width="170" height="118" rx="6"/>
+          <text class="dgt" x="662" y="128">高亮 IPS 屏</text>
+          <text class="dgs" x="662" y="148">7~10.1 in · ≥500 nit</text>
+          <text class="dgs" x="662" y="168">序号 / 名称 / 图片 / 数量</text>
+          <text class="dgs" x="662" y="188">仅显示，无交互</text>
+          <line class="dga" x1="600" y1="163" x2="644" y2="163" marker-end="url(#arInk)"/>
+          <text class="dgd" x="622" y="155" text-anchor="middle">HDMI</text>
+
+          <!-- realtime boundary -->
+          <line class="dga-acc" x1="360" y1="222" x2="360" y2="254" marker-end="url(#arAcc)"/>
+          <text class="dgs f-acc" x="372" y="234">串口 · GOTO x y / Z / VAC</text>
+          <text class="dgs f-acc" x="372" y="248">← 实时 / 非实时 边界</text>
+
+          <!-- motion controller -->
+          <rect class="dgb-acc" x="120" y="258" width="480" height="86" rx="6"/>
+          <text class="dgt" x="136" y="282">运动控制 · ESP32-S3</text>
+          <rect class="dgb" x="136" y="294" width="106" height="28" rx="4"/>
+          <text class="dgs" x="146" y="312">硬件定时器脉冲</text>
+          <rect class="dgb" x="252" y="294" width="106" height="28" rx="4"/>
+          <text class="dgs" x="262" y="312">梯形加减速</text>
+          <rect class="dgb" x="368" y="294" width="106" height="28" rx="4"/>
+          <text class="dgs" x="378" y="312">压力开关回读</text>
+          <rect class="dgb" x="484" y="294" width="106" height="28" rx="4"/>
+          <text class="dgs" x="494" y="312">一键启动</text>
+
+          <!-- arrow C -> actuators -->
+          <line class="dga" x1="360" y1="344" x2="360" y2="376" marker-end="url(#arInk)"/>
+          <text class="dgd" x="372" y="366">STEP / DIR / GPIO</text>
+
+          <!-- actuators -->
+          <rect class="dgb" x="120" y="380" width="180" height="56" rx="6"/>
+          <text class="dgt" x="134" y="404">X / Y 闭环步进</text>
+          <text class="dgs" x="134" y="422">GT2 20 齿 · 40mm/转</text>
+          <rect class="dgb" x="312" y="380" width="120" height="56" rx="6"/>
+          <text class="dgt" x="326" y="404">Z 轴步进</text>
+          <text class="dgs" x="326" y="422">浮动吸盘杆</text>
+          <rect class="dgb" x="444" y="380" width="156" height="56" rx="6"/>
+          <text class="dgt" x="458" y="404">真空泵 + 2位3通阀</text>
+          <text class="dgs" x="458" y="422">吸 / 破真空吹气</text>
+
+          <!-- power -->
+          <rect class="dgb" x="648" y="258" width="170" height="86" rx="6"/>
+          <text class="dgt" x="662" y="282">机内电源</text>
+          <text class="dgs" x="662" y="302">12V 10Ah 锂电池组</text>
+          <text class="dgs" x="662" y="320">赛中不可更换</text>
+          <line class="dga-dash" x1="644" y1="301" x2="604" y2="301" marker-end="url(#arInk)"/>
+          <text class="dgd" x="624" y="293" text-anchor="middle">供电</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>图 1　系统架构与数据流。</b>青色那一段是整个设计的要害：主控与运动控制器之间的串口是<strong>实时与非实时的边界</strong>。视觉与显示所需的算力、文件系统、图像格式支持都留在 Linux 侧，而对时序敏感的脉冲生成全部下沉到 MCU——这条边界划在哪里，决定了系统稳不稳。</figcaption>
+  </figure>
+
+  <h3>机器布局</h3>
+  <p>布局改为“托盘侧置 + 储物盒 2 列 × 3 行”：当前概念布局为 350 × 340 × 430mm，X 向已贴近赛规上限、没有加工公差；下一版 CAD 必须压缩到 ≤ 340 × 340 × 430mm，或重排盒体后再冻结加工尺寸。托盘采用规则最低尺寸 160 × 160mm，盒体先按 84mm 外宽建模。此尺寸是 CAD 起点，须用含机架、线轨、电机、相机、屏幕和接插件的完整包络复核。</p>
+  <p><strong>卡住包络的不是高度，是 X 向行程。</strong>高度这一侧其实很宽松：按≈3.6mm 镜头、≈250mm 工作距离，相机镜头到托盘面约 250mm，整机高度只用到 300mm 出头，离 450mm 还有百余毫米余量。真正没有余量的是 X 向——吸盘尖点要从最左一列盒心（约 x=142）走到托盘最右侧的取件点（约 x=415），约 <em>273mm</em>；而横梁长度被 350mm 封顶，扣掉 Z 滑座占位后有效行程只剩约 <em>290mm</em>。两者只差十几毫米，且全部要吃在结构公差里。</p>
+  <p>由此得到下一版 CAD 的第一优先级：<strong>盒区宽度是 X 向行程的直接输入，盒区每加宽 1mm，行程就少 1mm</strong>。正确顺序是先确认储物盒在能装下 4 件 40mm 货物的前提下最小能做到多少、托盘与盒区如何相对摆放，再反推横梁与行程；若反过来先定外形再往里塞盒子，X 向必超。若实测确认 84mm 盒体装不下 4 件 40mm，可选的换法有两条：盒区改横向排布并接受更长的横梁、或把六盒做成可旋转的盒盘，让末端只需到达一个投料位。</p>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 620 430" role="img" aria-label="紧凑布局概念图：布局概念包络 350 乘 340 毫米，六个独立储物盒以两列三行放在左侧，托盘 160 乘 160 毫米放在右侧；XY 龙门覆盖托盘与储物盒，相机安装在 430 毫米高度包络以内。">
+        <defs>
+          <marker id="dimA" class="mk-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z"/>
+          </marker>
+        </defs>
+        <g class="dg">
+          <!-- table outline -->
+          <rect x="90" y="55" width="350" height="340" rx="4" class="f-none s-rule" stroke-width="2"/>
+
+          <!-- Y rails -->
+          <rect x="90" y="55" width="9" height="340" class="f-steel s-rule" stroke-width="1"/>
+          <rect x="431" y="55" width="9" height="340" class="f-steel s-rule" stroke-width="1"/>
+
+          <!-- box area 3x2 -->
+          <g>
+            <rect x="100" y="80" width="84" height="84" class="dgb"/>
+            <rect x="184" y="80" width="84" height="84" class="dgb"/>
+            <rect x="100" y="164" width="84" height="84" class="dgb"/>
+            <rect x="184" y="164" width="84" height="84" class="dgb"/>
+            <rect x="100" y="248" width="84" height="84" class="dgb"/>
+            <rect x="184" y="248" width="84" height="84" class="dgb"/>
+            <text class="dgt" x="142" y="126" text-anchor="middle">1</text>
+            <text class="dgt" x="226" y="126" text-anchor="middle">2</text>
+            <text class="dgt" x="142" y="210" text-anchor="middle">3</text>
+            <text class="dgt" x="226" y="210" text-anchor="middle">4</text>
+            <text class="dgt" x="142" y="294" text-anchor="middle">5</text>
+            <text class="dgt" x="226" y="294" text-anchor="middle">6</text>
+          </g>
+          <text class="dgs" x="100" y="72">六盒 2 列 × 3 行 · 概念外宽 84mm</text>
+
+          <!-- gantry X beam -->
+          <rect x="92" y="190" width="346" height="12" class="f-acc" opacity="0.85" rx="2"/>
+          <text class="dgd f-onacc" x="270" y="199" text-anchor="middle">XY 龙门 · Z 轴随行</text>
+
+          <!-- tray -->
+          <rect x="270" y="145" width="160" height="160" class="f-surf2 s-rule" stroke-width="1.8" rx="3"/>
+          <text class="dgt" x="350" y="210" text-anchor="middle">托盘 160 × 160</text>
+          <text class="dgs" x="350" y="232" text-anchor="middle">边高 ≥ 10mm</text>
+          <text class="dgs" x="350" y="252" text-anchor="middle">随机摆放货物</text>
+
+          <!-- camera FOV -->
+          <rect x="266" y="141" width="164" height="168" class="f-none s-acc" stroke-width="1.5" stroke-dasharray="6 5" rx="4"/>
+          <text class="dgs f-acc" x="272" y="158">相机视场需实测</text>
+
+          <!-- camera callout -->
+          <text class="dgs" x="280" y="327">相机 / 屏幕 / 电机均计入外形包络</text>
+
+          <!-- dimension X -->
+          <text class="dgd" x="265" y="45" text-anchor="middle">概念布局 350 × 340mm；CAD 目标 ≤ 340 × 340mm</text>
+
+          <!-- dimension Y -->
+          <text class="dgd" x="265" y="374" text-anchor="middle">含相机高度目标 ≤ 430mm（规限 450mm）</text>
+
+          <!-- overall -->
+          
+
+          <!-- axes -->
+          <line class="dg-au" x1="470" y1="360" x2="510" y2="360" marker-end="url(#arAcc)"/>
+          <text class="dgd f-acc" x="516" y="364">X</text>
+          <line class="dg-au" x1="470" y1="360" x2="470" y2="328" marker-end="url(#arAcc)"/>
+          <text class="dgd f-acc" x="464" y="322">Y</text>
+          <circle cx="470" cy="360" r="2.5" class="dg-au-f"/>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>图 2　紧凑布局概念。</b>此图用于冻结空间关系，不是加工图。盒体外宽按 84mm 作为 CAD 起点，必须通过四件 40mm 量规/实物确认可完全存放；如装不下，应优先优化储物盒形状和布局，不能突破整机外形上限。相机视场、龙门行程、线轨和防护罩都要计入 350 × 350 × 450mm 包络。</figcaption>
+  </figure>
+</section>
+
+<!-- ============ 04 ============ -->
+<section id="s4">
+  <div class="shead"><span class="snum">04</span><h2 class="sh">主控选型论证</h2></div>
+  <p class="sub">这是全案最需要向老师交代的一点：为什么不用实验室已有的开发板。</p>
+
+  <p>规则里有一条容易被低估的要求：装置上必须装一块<strong>仅具显示功能的高亮显示屏，支持各种格式的图片播放</strong>，用于显示序号、货物名称、货物图片与数量。同时规则允许与笔记本电脑通讯，但明确<em>比赛中不能触碰笔记本、不允许任何形式的遥控</em>——这意味着笔记本不能充当主控，控制与显示必须全部机载。</p>
+
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>候选平台</th><th>高亮屏通路</th><th>视觉软件栈</th><th>运动时序</th><th>结论</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">SG2002<br>（LicheeRV Nano）</td>
+          <td><span class="pill no">无 HDMI</span> SoC 无此 PHY，仅 MIPI-DSI/RGB；接 HDMI 屏须加桥接芯片并自行写驱动</td>
+          <td>256MB 内存跑 OpenCV + 显示栈偏紧</td>
+          <td>已有 UART 电机/舵机方案</td>
+          <td><strong>否</strong>。其 NPU 优势在本赛项用不上，短板正好全打在要用的地方（理由的逐项核查、以及一个周末即可定案的验证实验，见<em>附录 A</em>）</td>
+        </tr>
+        <tr>
+          <td class="mono">ESP32-P4</td>
+          <td><span class="pill p1">有 MIPI-DSI</span> 可带屏</td>
+          <td>无 OpenCV，经典 CV 须手写</td>
+          <td><span class="pill no">有风险</span> 该芯片 PWM 外设已知不可用，步进脉冲须自行搭 RMT</td>
+          <td>可做，但要同时扛三个自研战场</td>
+        </tr>
+        <tr>
+          <td class="mono">Raspberry Pi<br>+ ESP32-S3</td>
+          <td><span class="pill yes">原生 HDMI</span> 直驱高亮屏</td>
+          <td>完整 OpenCV 与图像格式支持</td>
+          <td>脉冲下沉到 MCU 硬件定时器</td>
+          <td><strong>选定</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>为什么必须拆成两颗芯片</h3>
+  <p>Linux 不是实时系统。直接在 Pi 的 GPIO 上软件发脉冲会产生毫秒级抖动，对步进电机就是丢步——而丢一步的后果是机器头撞翻整盘货物，一轮报废。把脉冲生成下沉到 MCU 的硬件定时器，是这套架构的可靠性底线。</p>
+
+  <h3>关于启动时间</h3>
+  <p>Linux 冷启动约 20~30 秒，但在这个赛项里不构成问题：装置在调试阶段即已上电，<strong>"启动"按钮只负责触发程序</strong>，计时从裁判发令开始，与系统启动时间无关。</p>
+
+  <h3>成本可以让步的位置</h3>
+  <p>本任务每件货物只需拍摄 1~2 帧静止图像，算力远未饱和，因此主控可选 Raspberry Pi 4B 4GB 或 Zero 2W（约 ¥200），并把显示从 Chromium 改为 framebuffer 直绘，可省下约 ¥200。若追求舒适，Pi 5 4GB（约 ¥400）可随意运行网页式 UI。</p>
+</section>
+
+<!-- ============ 05 ============ -->
+<section id="s5">
+  <div class="shead"><span class="snum">05</span><h2 class="sh">子系统选型</h2></div>
+  <p class="sub">机械构型、传动、末端执行器与感知，逐项给出选择与理由。</p>
+
+  <h3>机械构型</h3>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>构型</th><th>自由度</th><th>优点</th><th>否决理由</th></tr></thead>
+      <tbody>
+        <tr><td><strong>直角坐标龙门 XY+Z</strong></td><td>3</td><td>运动学为线性映射，标定最简；刚性易做；标准件+自制件可造</td><td><span class="pill yes">选定</span></td></tr>
+        <tr><td>SCARA 两连杆</td><td>3</td><td>惯量小、速度快</td><td>逆解、刚性、标定三项都更麻烦</td></tr>
+        <tr><td>Delta</td><td>3</td><td>速度快</td><td>标定难、Z 行程小，不适合取放</td></tr>
+        <tr><td>旋转托盘 + 推板</td><td>2</td><td>机构最简</td><td>货物随机撒放，推板够不到盘心</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>传动</h3>
+  <p>选 <strong>GT2 同步带（6mm）+ 20 齿同步轮 + MGN12H 线轨</strong>。20 齿轮对应 40mm/转，1.8° 步进为 200 步/转，即 0.2mm/整步、16 细分后 0.0125mm/微步——比本任务所需高出两个数量级。导轨用 MGN12H 而非光轴+LM8UU，刚性更好、不易卡滞，价差很小。</p>
+
+  <h3>末端执行器</h3>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>方案</th><th>适配形状</th><th>风险</th><th>定位</th></tr></thead>
+      <tbody>
+        <tr><td><strong>硅胶波纹吸盘 + 微型真空泵 + 压力开关</strong></td><td>平面、球面、锥面（波纹吸盘自适应）</td><td>表面若有通孔或深槽会漏气</td><td><span class="pill yes">主方案</span></td></tr>
+        <tr><td>两指平行夹爪（总线舵机驱动）</td><td>全部</td><td>闭合行程中会碰到相邻货物</td><td><span class="pill p2">备选</span>球锥类吸不住时切换</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>吸盘的可靠性全在三个细节上，缺一个都会在赛场上出事：</p>
+  <p>① <strong>吸盘杆做弹簧浮动</strong>——Z 轴下压到固定低位即可，过量行程由弹簧吸收，既不需要测量货物高度，也不需要力控。② <strong>加真空压力开关</strong>——压力达标才提升，吸不住自动重试两次，仍失败则跳过该件继续做其余的。③ <strong>电磁阀用 2 位 3 通</strong>——一路吸、一路破真空吹气，释放是瞬时的，不会粘料。</p>
+
+  <h3>感知与显示</h3>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>项</th><th>选择</th><th>关键理由</th></tr></thead>
+      <tbody>
+        <tr><td>相机</td><td>USB UVC 工业相机 1080P + ≈3.6mm M12 定焦<br><span class="mono">工作距离 ≈ 250mm · 视场 ≈ 200mm（覆盖 160mm 托盘）</span></td><td><strong>必须支持手动锁定曝光与白平衡</strong>——这是选型硬指标，全自动相机在本赛项必然翻车。焦距不是自由选的，是由包络反推出来的：6~8mm 镜头对应 410~550mm 工作距离，装不进 450mm 机高。代价是广角必然带桶形畸变，必须做内参标定（见第 06 节）</td></tr>
+        <tr><td>光源</td><td>可调光环形 LED，Ra &gt; 90，配乳白亚克力漫射板</td><td>货物自带"模拟污渍与缺陷"图形干扰，显色指数不足会把红、橘、粉混淆</td></tr>
+        <tr><td>遮光</td><td>四周挡板 + 顶部遮光罩</td><td>阻断环境光漂移。上午调好的阈值下午失效，几乎都源于此</td></tr>
+        <tr><td>屏幕</td><td>7~10.1 in IPS，≥500 nit，HDMI 直连</td><td>规则要求"高亮"，且需显示货物图片，SPI 小屏不达标</td></tr>
+        <tr><td>显示实现</td><td>本地页面渲染（可选 framebuffer 直绘）</td><td>纯本地、无交互、不构成遥控，符合"仅显示"要求</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 06 ============ -->
+<section id="s6">
+  <div class="shead"><span class="snum">06</span><h2 class="sh">关键技术方案</h2></div>
+  <p class="sub">标定、识别、节拍与状态机——四个需要提前做对的地方。</p>
+
+  <h3>手眼标定</h3>
+  <p><strong>第一步是标内参、去畸变，不是直接拟合变换矩阵。</strong>本方案工作距离只有约 250mm，只能用 ≈3.6mm 广角镜头，桶形畸变不可忽略；而仿射或单应变换本质是线性映射，<em>消不掉径向畸变</em>。所以先用棋盘格标定板跑一次 <code>cv2.calibrateCamera</code> 取得内参与畸变系数，此后每一帧都先 <code>cv2.undistort</code> 再进入识别与定位流程。省掉这一步的典型症状是：标定板中心准、四角偏，且偏移量随货物在托盘中的位置变化——正好落进本赛项的盒口容差里，前期很难发现，后期很难查。</p>
+  <p>去畸变之后，像素坐标到机器坐标才是一个<strong>恒定的仿射变换</strong>，标定一次永久有效。做法是打印带十字标记的标定板置于托盘上，驱动吸盘尖点依次对准 4~9 个标记点，记录坐标对后用最小二乘拟合 2×3 仿射矩阵并存入配置文件；每次开机做单点校验，偏差超阈值即报警（防止相机被碰歪）。</p>
+  <p><strong>视差需要实测并标定。</strong>货物是有高度的（最大 40mm），同一个像素在货物顶面与托盘面上对应的机器坐标并不相同。用 160mm 托盘四角加若干不同高度的量块建立标定样本，拟合出随高度变化的修正；若误差超过盒口容差，就按 Z 高度做补偿，不能靠做大盒口把定位误差蒙过去。</p>
+
+  <h3>识别算法</h3>
+  <p>不使用 YOLO。固定俯视、单色背景、40mm 物体、且要求现场可调参数——经典 CV 在这里更快、更可控，且改阈值不需要重新训练，这对"决赛现场公布新货物"是决定性的。</p>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>步骤</th><th>做法</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">01 分割</td><td>HSV 域分割 + 连通域标记，全盘一次成像即取得 12 件以上货物的位置与轮廓</td></tr>
+        <tr><td class="mono">02 形状特征</td><td>面积、周长、圆度 4πA/P²、外接矩形长宽比、凸包缺陷数、多边形逼近后的角点数</td></tr>
+        <tr><td class="mono">03 颜色特征</td><td>取 ROI 中心 60% 区域的 Hue 中位数（非均值），避开边缘阴影</td></tr>
+        <tr><td class="mono">04 分组</td><td>分类键 =（形状，颜色，表面信息）；解码文字/二维码后规范化，信息不一致不得合并</td></tr>
+        <tr><td class="mono">05 命名</td><td>形状名称 + 颜色 + 可读文字/二维码信息；无法识别时标为待判，不猜测后合并</td></tr>
+        <tr><td class="mono">06 图片</td><td>保存本件实时裁剪图；显示序号、名称、图片和累计成功数量后才进入下一件</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>抗干扰与未知货物处理：颜色取中位数；几何特征结合多边形逼近；文字和二维码做多阈值解码。对每件货物保留置信度，低于阈值就重新拍摄/多角度检查，不自动归入猜测类别。先确认标记可能出现的表面；若可出现在侧面或底面，需加入斜视相机或抓取后旋转复拍机构。</p>
+
+  <h3>节拍预算</h3>
+  <p>以下是待实机验证的内部目标：4.9 秒/件，12 件约 59 秒。规则没有在已查发布稿中给出固定总时长；超过 15 秒无动作或未显示本次信息会结束本轮。因此需重点保证每件流程都及时动作和刷新，不能把 90 秒写成官方计时上限。</p>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>环节</th><th>耗时</th><th>占比</th></tr></thead>
+      <tbody>
+        <tr><td>识别（俯拍 + 分类）</td><td class="num">0.4 s</td><td><div class="bar"><i style="width:8%"></i></div></td></tr>
+        <tr><td>XY 移动（按紧凑布局实测最远路径，含加减速）</td><td class="num">1.5 s</td><td><div class="bar"><i style="width:31%"></i></div></td></tr>
+        <tr><td>Z 下压 + 吸气 + 提升</td><td class="num">1.2 s</td><td><div class="bar"><i style="width:24%"></i></div></td></tr>
+        <tr><td>XY 至目标盒 + 下压 + 吹气释放</td><td class="num">1.6 s</td><td><div class="bar"><i style="width:33%"></i></div></td></tr>
+        <tr><td>显示刷新（与运动并行）</td><td class="num">0.2 s</td><td><div class="bar accentless"><i style="width:4%"></i></div></td></tr>
+        <tr class="total"><td>单件合计</td><td class="num">4.9 s</td><td><div class="bar"><i style="width:100%"></i></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>顺序按最近邻规划减少空跑；每件完成后立即刷新并确认序号、名称、图片和累计数量。未完成显示确认前禁止取下一件。节拍要在屏幕、气泵和电池同时工作时测量。</p>
+
+  <h3>状态机与健壮性</h3>
+  <p>流程为：全盘成像 → 识别形状/颜色/可见表面信息 → 低置信度复拍或旋转检查 → 建立分类键与目标盒映射 → 逐件取放 → 确认货物完全入盒 → 显示序号、名称、实时图片和成功总数 → 显示确认后再处理下一件。</p>
+  <div class="note">
+    <p><b>稳健性优先于盲目跳件。</b>错误分组或未完全入盒都可能导致该件不得分；信息不确定时先复拍/重试，超过重试上限则显示失败状态并停止处理该件，只有在确保货物没有掉出装置范围且规则允许继续时才继续下一件。失败清单不能替代规则要求的逐件显示。</p>
+  </div>
+</section>
+
+<!-- ============ 07 ============ -->
+<section id="s7">
+  <div class="shead"><span class="snum">07</span><h2 class="sh">BOM 与预算</h2></div>
+  <p class="sub">价格为 2026 年 9 月国内电商估算基线，实际以询价为准。先冻结尺寸与电机/驱动器接口，再采购；标为待询价的项目不纳入现有合计。</p>
+
+  <h3>机械结构</h3>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>物料</th><th>规格</th><th class="num">数量</th><th class="num">单价</th><th class="num">小计</th><th>优先级</th></tr></thead>
+      <tbody>
+        <tr><td>2020 铝型材</td><td class="mono">按 CAD 下料，单件长度 ≤ 340mm</td><td class="num">4 + 4</td><td class="num">¥12 / ¥10</td><td class="num">¥88</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>角件与螺母</td><td class="mono">直角件 + 滑块螺母</td><td class="num">1 套</td><td class="num">¥40</td><td class="num">¥40</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>MGN12H 线轨</td><td class="mono">X 向有效行程 ≥ 280mm、Y 向 ≥ 200mm；禁止沿用 400mm 规格</td><td class="num">3</td><td class="num">¥45</td><td class="num">¥135</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>GT2 同步带</td><td class="mono">6mm 宽，开口</td><td class="num">5 m</td><td class="num">¥5</td><td class="num">¥25</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>GT2 同步轮</td><td class="mono">20 齿，5mm 孔</td><td class="num">4</td><td class="num">¥6</td><td class="num">¥24</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>张紧惰轮</td><td class="mono">GT2 光轮</td><td class="num">4</td><td class="num">¥5</td><td class="num">¥20</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>铝底板</td><td class="mono">约 340 × 330 × 5mm，最终按包络 CAD 定尺寸</td><td class="num">1</td><td class="num">¥70</td><td class="num">¥70</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>3D 打印耗材</td><td class="mono">PLA / PETG 1kg</td><td class="num">2</td><td class="num">¥70</td><td class="num">¥140</td><td><span class="pill p1">P1</span></td></tr>
+        <tr><td>亚克力板</td><td class="mono">3mm，约 340 × 330；按遮光罩展开图下料</td><td class="num">2</td><td class="num">¥30</td><td class="num">¥60</td><td><span class="pill p1">P1</span></td></tr>
+        <tr><td>托盘与储物盒 ×7</td><td class="mono">自制：切割 + 打印</td><td class="num">1 套</td><td class="num">—</td><td class="num">—</td><td><span class="pill p1">P1</span></td></tr>
+        <tr><td>螺丝 / 端子 / 线材</td><td class="mono">一套</td><td class="num">1</td><td class="num">¥150</td><td class="num">¥150</td><td><span class="pill p1">P1</span></td></tr>
+        <tr class="total"><td colspan="4">机械结构小计</td><td class="num">¥752</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>驱动与传动</h3>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>物料</th><th>规格</th><th class="num">数量</th><th class="num">单价</th><th class="num">小计</th><th>优先级</th></tr></thead>
+      <tbody>
+        <tr><td>42 闭环步进</td><td class="mono">42×48mm，0.5 N·m，带编码器</td><td class="num">2</td><td class="num">¥130</td><td class="num">¥260</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>42 步进（Z 轴）</td><td class="mono">42×40mm</td><td class="num">1</td><td class="num">¥45</td><td class="num">¥45</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>步进驱动器</td><td class="mono">X/Y 闭环电机配同系列编码器驱动器；Z 轴按最终电机配驱动</td><td class="num">3</td><td class="num">待询价</td><td class="num">待询价</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>联轴器与轮座</td><td class="mono">5 → 8mm</td><td class="num">3</td><td class="num">¥8</td><td class="num">¥24</td><td><span class="pill p0">P0</span></td></tr>
+        <tr class="total"><td colspan="4">驱动传动小计</td><td class="num">待询价</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>驱动器必须与电机编码器、供电电压和控制接口匹配。TMC2209 是开环驱动方案，不能直接作为本表闭环电机的驱动器；在型号和报价确定前，不冻结驱动采购金额。</p>
+
+  <h3>抓取气路</h3>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>物料</th><th>规格</th><th class="num">数量</th><th class="num">单价</th><th class="num">小计</th><th>优先级</th></tr></thead>
+      <tbody>
+        <tr><td>硅胶波纹吸盘</td><td class="mono">φ15 / φ20 混装</td><td class="num">6</td><td class="num">¥4</td><td class="num">¥24</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>微型真空泵</td><td class="mono">DC12V 无刷隔膜，−60 kPa</td><td class="num">1</td><td class="num">¥90</td><td class="num">¥90</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>电磁阀</td><td class="mono">DC12V 2 位 3 通</td><td class="num">2</td><td class="num">¥25</td><td class="num">¥50</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>真空压力开关</td><td class="mono">可调阈值，DC12V</td><td class="num">1</td><td class="num">¥35</td><td class="num">¥35</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>气管与快插接头</td><td class="mono">4mm</td><td class="num">1 套</td><td class="num">¥30</td><td class="num">¥30</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>浮动吸盘杆</td><td class="mono">弹簧 + 直线轴承，自制</td><td class="num">1</td><td class="num">¥20</td><td class="num">¥20</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>备选夹爪</td><td class="mono">总线舵机 STS3215 + 打印夹爪</td><td class="num">1</td><td class="num">¥120</td><td class="num">¥120</td><td><span class="pill p2">P2</span></td></tr>
+        <tr class="total"><td colspan="4">抓取气路小计</td><td class="num">¥369</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>视觉</h3>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>物料</th><th>规格</th><th class="num">数量</th><th class="num">单价</th><th class="num">小计</th><th>优先级</th></tr></thead>
+      <tbody>
+        <tr><td>UVC 工业相机</td><td class="mono">1080P@30，可手动锁曝光 / 白平衡</td><td class="num">1</td><td class="num">¥180</td><td class="num">¥180</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>定焦镜头</td><td class="mono">≈3.6mm，M12，工作距离 ≈ 250mm</td><td class="num">1</td><td class="num">¥60</td><td class="num">¥60</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>环形光源</td><td class="mono">可调光，Ra &gt; 90，φ100~150</td><td class="num">1</td><td class="num">¥80</td><td class="num">¥80</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>漫射板</td><td class="mono">乳白亚克力 3mm</td><td class="num">1</td><td class="num">¥20</td><td class="num">¥20</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>相机支架</td><td class="mono">型材延长臂，与机架刚性固定</td><td class="num">1</td><td class="num">¥30</td><td class="num">¥30</td><td><span class="pill p0">P0</span></td></tr>
+        <tr class="total"><td colspan="4">单相机基础视觉小计（不含多视角增量）</td><td class="num">¥370</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>若标签可能出现在侧面或底面，单个俯视相机无法保证看见全部信息。先用官方货物样件验证可见性；若需复拍，再在斜视相机与旋转检查机构中择一，并把其体积、功耗和预算计入总包络。</p>
+
+  <h3>显示、主控与电源</h3>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>物料</th><th>规格</th><th class="num">数量</th><th class="num">单价</th><th class="num">小计</th><th>优先级</th></tr></thead>
+      <tbody>
+        <tr><td>高亮显示屏</td><td class="mono">7~10.1 in IPS，≥500 nit，HDMI</td><td class="num">1</td><td class="num">¥250</td><td class="num">¥250</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>主控</td><td class="mono">Raspberry Pi 4B 4GB（主选）；Zero 2W 仅在 OCR/显示实测通过后替代</td><td class="num">1</td><td class="num">¥200</td><td class="num">¥200</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>运动 MCU</td><td class="mono">ESP32-S3 开发板</td><td class="num">1</td><td class="num">¥30</td><td class="num">¥30</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>开关电源</td><td class="mono">DC12V 10A，调试用</td><td class="num">1</td><td class="num">¥60</td><td class="num">¥60</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>DC-DC 降压</td><td class="mono">12V → 5V 5A</td><td class="num">1</td><td class="num">¥25</td><td class="num">¥25</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>机内电池组</td><td class="mono">12V 10Ah + BMS</td><td class="num">1</td><td class="num">¥200</td><td class="num">¥200</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>一键启动按钮</td><td class="mono">带灯自锁，标注"启动"</td><td class="num">1</td><td class="num">¥15</td><td class="num">¥15</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>存储卡 / 线材 / 外壳</td><td class="mono">—</td><td class="num">1</td><td class="num">¥80</td><td class="num">¥80</td><td><span class="pill p1">P1</span></td></tr>
+        <tr class="total"><td colspan="4">显示主控电源小计</td><td class="num">¥860</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>合计</h3>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>分项</th><th class="num">金额</th></tr></thead>
+      <tbody>
+        <tr><td>机械结构</td><td class="num">¥752</td></tr>
+        <tr><td>机械传动及电机（不含驱动器）</td><td class="num">¥329</td></tr>
+        <tr><td>抓取气路</td><td class="num">¥369</td></tr>
+        <tr><td>视觉</td><td class="num">¥370</td></tr>
+        <tr><td>显示 / 主控 / 电源</td><td class="num">¥860</td></tr>
+        <tr><td>已标价基线（不含闭环驱动器与多视角扩展）</td><td class="num">¥2,680</td></tr>
+        <tr class="total"><td>已标价项含 15% 预留（驱动器/多视角另计）</td><td class="num">≥ ¥3,082</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>当前 ¥2,680 已标价基线和 ¥3,082 预留估算均不含闭环驱动器，不是新方案采购总价。新方案增量至少包括匹配的闭环驱动器；若测试确认侧面/底面信息需要多视角，还需增加斜视相机或复拍机构。完成 CAD、样件识别和正式询价后再给出采购总额。备件按驱动器、同步带、吸盘和接插件建立清单。</p>
+
+  <h3>采购红线</h3>
+  <p>规则要求非标零件须自主设计和制造。因此<strong>不得购买成品装置套件拼装</strong>，也不宜购买成品 XY 平台或雕刻机拆件使用，存在被判"非自主设计"的风险；铝型材、线轨、同步带、步进电机、驱动器、传感器、相机、屏幕、泵阀属于标准零部件与元器件，可以采购。所有自制件的 STEP / DXF 源文件与设计图纸必须留存，检录与作品创意设计评分都要用到。另需注意规则中"<strong>同校作品雷同得 0 分</strong>"，立项前应确认校内是否有其他队伍报名同一赛项。</p>
+</section>
+
+<!-- ============ 08 ============ -->
+<section id="s8">
+  <div class="shead"><span class="snum">08</span><h2 class="sh">进度排期</h2></div>
+  <p class="sub">排期原则：先把不依赖硬件的纸上工作做完，元器件一到货即可进入实机阶段，避免整机停下来等设计或等器件。</p>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 820 300" role="img" aria-label="进度甘特图：2026 年 9 月下旬至 10 月中为立项与采购；10 月中至 11 月底为设计定型，完成 CAD 出图、算法离线验证与任务命题文档初稿；12 月至次年 1 月中为机械搭建，1 月中至 2 月底为视觉联调，3 月进行节拍与鲁棒性回归，4 月起转入决赛预案。">
+        <g class="dg">
+          <!-- month ticks -->
+          <text class="dgs" x="180" y="26" text-anchor="middle">2026.09</text>
+          <text class="dgs" x="255" y="26" text-anchor="middle">.10</text>
+          <text class="dgs" x="330" y="26" text-anchor="middle">.11</text>
+          <text class="dgs" x="405" y="26" text-anchor="middle">.12</text>
+          <text class="dgs" x="480" y="26" text-anchor="middle">2027.01</text>
+          <text class="dgs" x="555" y="26" text-anchor="middle">.02</text>
+          <text class="dgs" x="630" y="26" text-anchor="middle">.03</text>
+          <text class="dgs" x="705" y="26" text-anchor="middle">.04</text>
+          <text class="dgs" x="780" y="26" text-anchor="middle">.05</text>
+          <line class="dg-sl" x1="180" y1="34" x2="780" y2="34"/>
+          <line class="dg-sl" x1="180" y1="34" x2="180" y2="258"/>
+          <line class="dg-sl" x1="255" y1="34" x2="255" y2="258"/>
+          <line class="dg-sl" x1="330" y1="34" x2="330" y2="258"/>
+          <line class="dg-sl" x1="405" y1="34" x2="405" y2="258"/>
+          <line class="dg-sl" x1="480" y1="34" x2="480" y2="258"/>
+          <line class="dg-sl" x1="555" y1="34" x2="555" y2="258"/>
+          <line class="dg-sl" x1="630" y1="34" x2="630" y2="258"/>
+          <line class="dg-sl" x1="705" y1="34" x2="705" y2="258"/>
+          <line class="dg-sl" x1="780" y1="34" x2="780" y2="258"/>
+
+          <!-- row labels -->
+          <text class="dgs" x="164" y="73" text-anchor="end">P0 立项与采购</text>
+          <text class="dgs" x="164" y="107" text-anchor="end">P1 设计定型</text>
+          <text class="dgs" x="164" y="141" text-anchor="end">P2 机械搭建</text>
+          <text class="dgs" x="164" y="175" text-anchor="end">P3 视觉联调</text>
+          <text class="dgs" x="164" y="209" text-anchor="end">P4 节拍与鲁棒</text>
+          <text class="dgs" x="164" y="243" text-anchor="end">P5 决赛预案</text>
+
+          <!-- row hairlines -->
+          <line class="dg-sl" x1="180" y1="86" x2="780" y2="86" opacity="0.5"/>
+          <line class="dg-sl" x1="180" y1="120" x2="780" y2="120" opacity="0.5"/>
+          <line class="dg-sl" x1="180" y1="154" x2="780" y2="154" opacity="0.5"/>
+          <line class="dg-sl" x1="180" y1="188" x2="780" y2="188" opacity="0.5"/>
+          <line class="dg-sl" x1="180" y1="222" x2="780" y2="222" opacity="0.5"/>
+          <line class="dg-sl" x1="180" y1="256" x2="780" y2="256" opacity="0.5"/>
+
+          <!-- bars -->
+          <rect x="237" y="60" width="55" height="18" rx="3" class="f-acc"/>
+          <text class="dgd" x="300" y="73">方案定型 · 器件下单</text>
+
+          <rect x="292" y="94" width="113" height="18" rx="3" class="f-acc"/>
+          <text class="dgd" x="413" y="107">CAD 出图 · 算法离线验证 · 文档 A 初稿</text>
+
+          <rect x="405" y="128" width="112" height="18" rx="3" class="f-acc"/>
+          <text class="dgd" x="525" y="141">框架装配 · 传动调通 · 三轴联动</text>
+
+          <rect x="517" y="162" width="113" height="18" rx="3" class="f-acc"/>
+          <text class="dgd" x="638" y="175">手眼标定 · 识别接入 · 状态机</text>
+
+          <rect x="630" y="196" width="75" height="18" rx="3" class="f-acc"/>
+          <text class="dgd" x="713" y="209">50 轮撒放回归</text>
+
+          <rect x="705" y="230" width="75" height="18" rx="3" class="f-acc"/>
+          <text class="dgd f-onacc" x="742" y="243" text-anchor="middle">决赛预案</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>图 3　进度排期。</b>关键设计是 P1 阶段——CAD 出图、识别算法离线验证、任务命题文档 A 初稿，全部能在 PC 上完成，不依赖任何硬件到货，因此可以与采购并行推进、随时中断。<b>机械搭建与联调紧接元器件到货之后</b>，这样即便 P1 因故延后，影响的也只是文档质量，而不是整台装置的完成度。</figcaption>
+  </figure>
+
+  <h3>里程碑验收标准</h3>
+  <p>每个阶段设一道硬门槛，不达标不进入下一阶段，避免问题在后期集中爆发。</p>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>里程碑</th><th>验收条件</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">P1 结束</td><td>识别 12 件以上样件的形状、颜色、文字/二维码；按完整分类键分组准确率 100%，包含污渍、随机朝向和低置信度复拍用例</td></tr>
+        <tr><td class="mono">P2 结束</td><td>完整装置包络不超过 350 × 350 × 450mm；托盘不小于 160 × 160mm；轴行程覆盖所有取放点，重复定位误差按盒口容差验收</td></tr>
+        <tr><td class="mono">P3 结束</td><td>12 件全流程自动跑完一轮，全程人工不干预</td></tr>
+        <tr><td class="mono">P4 结束</td><td>随机朝向/污渍/信息样件做 50 轮；记录整轮完成率、正确分组率、完全入盒率、逐件显示正确率及用时。≥90% 是内部目标，不是官方标准</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <p><b>排期的最大不确定性是校赛与省赛的时间。</b>若校赛提前至 2026 年内，P1 与 P2 需要压缩或并行推进，届时应有所取舍：优先保证机械搭建与视觉联调，任务命题文档 A 可缩减篇幅但不能缺失。这一项需要尽早确认。</p>
+  </div>
+</section>
+
+<!-- ============ 09 ============ -->
+<section id="s9">
+  <div class="shead"><span class="snum">09</span><h2 class="sh">风险与对策</h2></div>
+  <p class="sub">按"概率 × 影响"列出，每项都配一条可执行的退路。</p>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>风险</th><th>概率</th><th>影响</th><th>对策</th></tr></thead>
+      <tbody>
+        <tr><td>校赛 / 省赛时间早于预期</td><td>中</td><td>高</td><td>立项前确认官方时间节点；若校赛在 2026 年内，压缩 P1 或改为与 P2 并行推进</td></tr>
+        <tr><td>机械与视觉的接口未及时冻结</td><td>中</td><td>高</td><td>相机工作距离（决定镜头焦距与视场）是全案唯一硬接口，必须在结构设计早期定死；该值一旦变动，相机支架、遮光罩、行程余量全部返工</td></tr>
+        <tr><td>决赛新货物识别失效</td><td>高</td><td>中</td><td>特征描述式命名 + 实时裁图显示；赛前准备"一键标定"流程，压缩现场调参时间</td></tr>
+        <tr><td>吸盘吸不住球体 / 锥体</td><td>中</td><td>中</td><td>波纹吸盘 + 备用夹爪；对球锥类单独降低取放速度</td></tr>
+        <tr><td>显示刷新拖慢节拍</td><td>中</td><td>中</td><td>双缓冲 + 图片预解码 + 局部重绘；屏幕走 HDMI 不经 SPI</td></tr>
+        <tr><td>电池续航不足（赛中不可换电）</td><td>低</td><td>高</td><td>实测整机功耗后校核 12V 10Ah 容量，赛前必做满电全程实测</td></tr>
+        <tr><td>检录被判定为非自主设计</td><td>低</td><td>高</td><td>留存全部图纸与源文件；不采购成品套件</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="s10">
+  <div class="shead"><span class="snum">10</span><h2 class="sh">需要老师支持的事项</h2></div>
+  <p class="sub">以下事项决定项目能否按计划启动。</p>
+  <ul class="asks">
+    <li><span class="box"></span><div><b>确认赛事时间节点</b>校赛、省赛的报名与比赛时间，用以复核第 08 节的排期是否需要压缩或改为并行推进。</div></li>
+    <li><span class="box"></span><div><b>确认参赛名额与报名流程</b>目前两人分工为视觉/运动控制/文档与 CAD/加工，前者负载偏高。建议增加一名成员负责电气布线、驱动调试和整机回归；如只能两人，先删减旋转检查机构等扩展项并向老师确认加工支持。需确认报名时间与指导老师流程。</div></li>
+    <li><span class="box"></span><div><b>复核最新版发布稿与本校赛程</b>已按发布稿的 350 × 350 × 450mm、货物信息识别和 15 秒无动作规则改方案；报名及校赛日期仍需向本校确认。</div></li>
+    <li><span class="box"></span><div><b>加工条件</b>3D 打印机与激光切割机的使用权限及耗材，以及决赛现场加工环节所需的设备熟悉机会。</div></li>
+    <li><span class="box"></span><div><b>经费</b>第 07 节的 ¥3,082 基线估算尚未含闭环驱动器；驱动器、多角度识别和结构重排需重新询价后申请，另保留 15%–20% 机动金。</div></li>
+    <li><span class="box"></span><div><b>场地</b>一张可长期占用的约 1m × 1m 实验台。本赛项无场地依赖，只需一张能持续放置装置的桌子用于反复回归测试。</div></li>
+  </ul>
+</section>
+
+<!-- ============ 附录 A ============ -->
+<section id="sA">
+  <div class="shead"><span class="snum">附录 A</span><h2 class="sh">SG2002 路线核查与最小验证实验</h2></div>
+  <p class="sub">实验室已有 LicheeRV Nano（SG2002）核心板。若能用，可省下主控与显示屏的采购。但"已有"不等于"能用"——本附录给出逐项核查结论，以及一个周末即可定案的实验。</p>
+
+  <p>第 04 节判定 SG2002 路线为"否"，核心理由——<strong>它的长处用不上，短处却正好全打在要用的地方</strong>——不会随实验改变。但"因此选 Raspberry Pi"这个结论是可以被推翻的，本附录给出推翻它的条件。</p>
+
+  <h3>逐项核查</h3>
+  <p>核查过程中最先被否掉的，是一个一开始最容易担心的问题：摄像头和显示屏能不能同时用。答案是能。</p>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>核查项</th><th>结论</th><th>依据</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>摄像头与显示屏能否同时使用</td>
+          <td><span class="pill yes">可以</span></td>
+          <td>MIPI-CSI 为 22Pin 4-lane、MIPI-DSI 为 31Pin 2-lane，是<strong>两个独立连接器</strong>，各走各的引脚组，不存在"二选一"。同芯片的 MaixCAM 即为摄像头与屏同时工作的量产成品</td>
+        </tr>
+        <tr>
+          <td>摄像头软件栈</td>
+          <td><span class="pill no">主要障碍</span></td>
+          <td>不是 V4L2，也没有 <code>/dev/video0</code>，而是 CVITEK VI + MMF 中间件；内核为 SDK 自带的 linux 5.10（主线内核只合入了设备树，不含 ISP/VI 栈）。官方明确：MIPI RX <strong>只能在用户空间初始化，且需修改 middleware 代码</strong></td>
+        </tr>
+        <tr>
+          <td>可用摄像头传感器</td>
+          <td><span class="pill p2">受限</span></td>
+          <td>官方确认可用的仅 GC4653 与 OS04A10 两款；<code>sensor_list.json</code> 中虽列出 GC2083、OV5647 等十余款，社区仍在质疑这些是否真能直接使用</td>
+        </tr>
+        <tr>
+          <td>显示屏</td>
+          <td><span class="pill p1">可用，但无选择余地</span></td>
+          <td>framebuffer 路径经社区实测正常（<code>fbpattern</code> 与开机 logo 均可显示）。但屏幕被限定为 Sipeed 的 ST7701 系列，<strong>亮度官方未给出任何参数</strong>——而规则要求的是"高亮显示屏"</td>
+        </tr>
+        <tr>
+          <td>摄像头实时上屏</td>
+          <td><span class="pill p1">可绕开</span></td>
+          <td>社区实测 <code>sample_vio</code>（摄像头到屏幕的实时链路）输出异常，且使用者无法判断是摄像头还是屏幕的问题。但本赛项只需要<strong>静止截图</strong>，走单帧导出再渲染到 framebuffer，可完全绕开这条链路</td>
+        </tr>
+        <tr>
+          <td>摄像头与触摸屏的总线</td>
+          <td><span class="pill p1">可绕开</span></td>
+          <td>两者共用 I2C4，且该总线处于 1.8V 电源域，而触摸屏芯片（GT911）典型为 3.3V，存在电平匹配风险。<strong>选用非触摸屏即可规避</strong>；规则要求"仅输出功能"，不带触摸本来就更合规</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <p><b>一条退路，以及它为什么暂时不算退路：</b>SG2002 也可以通过 USB 接 UVC 摄像头，从而完全绕开 CVITEK 中间件栈——这条路本团队已经走过。它有两个已知问题：板子只有一个 USB-C 且兼作供电，"同时做主机与供电"需要确认；更要紧的是，此前在该平台上遇到过<strong>不可恢复的 UVC DMA 挂死</strong>，该问题目前在内核侧处理中。</p>
+    <p>因此这条路的判断标准很明确：<strong>挂死问题没有定位并解决之前，不能作为比赛日方案</strong>——因为比赛开始后不得触碰装置，一次挂死就是整轮报废。可以把它作为一个信息项顺手验证，但不要把它当作主路。</p>
+  </div>
+
+  <h3>问题的本质是错配，不是难度</h3>
+  <p>把本赛项必需的三条链路与两个平台并排放，结论就清楚了：</p>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>本赛项必需的链路</th><th>SG2002</th><th>Raspberry Pi</th></tr></thead>
+      <tbody>
+        <tr><td>货物图像采集</td><td>需自研中间件初始化，传感器仅两款可选</td><td>libcamera / UVC 标准通路，开箱即用</td></tr>
+        <tr><td>机载显示屏输出</td><td>仅 MIPI-DSI，面板固定，亮度无参数</td><td>原生 HDMI，可自行选择亮度达标的面板</td></tr>
+        <tr><td>AI 推理</td><td><strong>1 TOPS NPU —— 本方案用不上</strong></td><td>无 NPU，本方案同样不需要</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>本方案已确定识别采用经典 CV（见第 05 节），<strong>整条推理链路不需要 NPU</strong>。而 NPU 正是 SG2002 相对 Raspberry Pi 的唯一显著优势。走 SG2002，等于用它的短板去换一个用不上的长处。</p>
+  <p>需要说明的是：<strong>如果当初选的是 YOLO 方案，这个结论会反过来</strong>，SG2002 反而更有吸引力。选型结论对识别方案的依赖关系，值得在设计早期就想清楚。</p>
+
+  <h3>最小验证实验（一个周末即可定案）</h3>
+  <p>在采购任何器材、改动任何方案之前，先用官方镜像做完以下六步。实验只回答一个问题：<strong>这条摄像头链路在本团队手里是否走得通</strong>。</p>
+  <ul class="asks">
+    <li><span class="box"></span><div><b>① 烧录官方镜像并确认系统正常</b>使用 LicheeRV-Nano-Build 官方镜像，串口登录确认系统启动、存储与网络正常。</div></li>
+    <li><span class="box"></span><div><b>② 单独点亮显示屏</b>按官方文档写入 <code>panel=</code> 参数并启用 framebuffer，用 <code>fbpattern</code> 确认屏幕能正常显示。</div></li>
+    <li><span class="box"></span><div><b>③ 单独取到一帧摄像头图像</b>接官方摄像头模块，用 <code>sensor_test</code> 导出单帧图像，确认画面内容正确。</div></li>
+    <li><span class="box"></span><div><b>④ 把这一帧画到屏幕上</b>由程序读入第 ③ 步的帧并渲染至 framebuffer。<strong>这一步是全部的关键</strong>——它对应规则要求的"货物图片"，且刻意绕开实时视频链路。</div></li>
+    <li><span class="box"></span><div><b>⑤ 测一次端到端延迟</b>从触发采集到画面刷新，记录耗时。本方案每件货物的识别预算为 0.4 秒，若该链路超过 1 秒，第 08 节的节拍规划需要重算。</div></li>
+    <li><span class="box"></span><div><b>⑥ 连续运行 30 分钟</b>观察是否出现画面丢失、进程退出或系统无响应。稳定性比功能更值得先验证。</div></li>
+  </ul>
+
+  <h3>决策规则</h3>
+  <p>为避免"再试一次就好"的拖延，先约定判据：</p>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>实验结果</th><th>决策</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>六步全部通过</td>
+          <td><strong>采用 SG2002 + STM32</strong></td>
+          <td>板子已在手，可省下主控与屏幕的采购；NPU 是白送的余量，日后若需加速识别可直接启用；StarryOS 创新点与本路线同源，叙事更完整</td>
+        </tr>
+        <tr>
+          <td>③ 或 ④ 任一步卡住</td>
+          <td><strong>改用 Raspberry Pi + ESP32-S3</strong></td>
+          <td>不再投入时间。既然识别已定经典 CV，Pi 在软件栈上什么都不缺，且 HDMI 让显示屏的亮度不再受限</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>这项实验与机械部分完全解耦：<strong>无论结果如何，第 05 节的吸盘方案与机械选型都不受影响，可与实验并行推进</strong>。</p>
+
+  <h3>一处不对等的风险</h3>
+  <p>选型不能只比"能不能做出来"，还要比"出事之后能不能救"。本赛项有两条硬约束把这一点放大了：比赛开始后<strong>不得触碰装置</strong>，且<strong>比赛中不得更换电源、不得接触笔记本</strong>。</p>
+  <p>在这两条约束下，Raspberry Pi 路线的故障大多是可替换的——换一张 SD 卡、甚至换一块主板即可重来，备件成本约 ¥200，可以买两块备着。而 SG2002 路线的故障大多落在驱动与中间件层，<strong>换一块板子并不会让驱动栈变得可用</strong>。</p>
+  <p>同样的"挂掉"，两种路线的可恢复性完全不同。这也是第 04 节最终倾向 Pi 的原因之一：在一天出成绩的现场赛里，<em>稳定但无聊</em>的方案比<em>精巧但脆弱</em>的方案更值钱。</p>
+</section>
+
+<footer>
+  智能分拣装置技术方案 · v2.1 · 2026-09-23 · 蒋玉月<br>
+  规则核对依据：《2027 年智能+工程创新赛道命题与运行发布稿》及《竞赛命题解析》。官方发布稿链接：<a href="https://www.shiep.edu.cn/_upload/article/files/61/d5/340105744e3c9ee39242687d8129/0958691b-a187-48e7-a642-8440ce5b65c8.pdf">查看发布稿 PDF</a>；赛前以组委会/本校最新通知为准。
+</footer>
+
+</main>
+</div>
+</div>
