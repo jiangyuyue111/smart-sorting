@@ -87,8 +87,10 @@
 
 | 路径 | 内容 |
 |---|---|
-| [docs/技术方案-v3.0.md](docs/技术方案-v3.0.md) | **主方案文档（v3.0，Markdown，最新）** |
-| [docs/技术选型方案.html](docs/技术选型方案.html) | 同上，排版版（v3.0，给老师看） |
+| [docs/技术方案-v3.0.md](docs/技术方案-v3.0.md) | **工程实现版**：架构、动作序列、串口协议、显示实现、开发计划 W1–W7 |
+| [docs/技术选型方案.html](docs/技术选型方案.html) | **对老师/文档 A 版**：论证、选型、BOM、风险。浏览器打开 |
+| [docs/软件方案.md](docs/软件方案.md) | **软件落地版**：线程模型、模块划分、串口协议、状态机、降级矩阵、无板开发 |
+| [sorting/](sorting/) | **上位机代码（S1 骨架已落地）**：协议/链路/状态机/动作序列 + 单元测试，无板可跑 |
 | [docs/智能分拣装置_DOBOT机械臂改造方案与调研清单.html](docs/智能分拣装置_DOBOT机械臂改造方案与调研清单.html) | 机械臂选型与改造调研 |
 | [docs/智能分拣设备-概念效果图.png](docs/智能分拣设备-概念效果图.png) | 概念效果图 |
 | [docs/调研-实验室Jetson视觉平台/](docs/调研-实验室Jetson视觉平台/) | **⚠️ 反面参考**：实验室那套平台能不能复用（结论：代码不能） |
@@ -107,7 +109,34 @@
 
 ---
 
-## 五、关于仓库外的一份源码副本
+## 五、上位机代码（sorting/）
+
+S1 骨架，**不需要板子**就能跑：
+
+```powershell
+cd D:\智能分拣
+python -m unittest discover -s sorting\tests -t .   # 32 个单元测试
+python -m sorting.app.main --demo                    # 模拟 MCU 跑一遍完整工序
+python -m sorting.app.main --port COM3 --demo        # 接真机（需要 STM32 先烧好固件）
+```
+
+| 模块 | 职责 |
+|---|---|
+| `sorting/core/protocol.py` | UART 行协议编解码。**契约在这里，改协议先改它和它的测试** |
+| `sorting/core/link.py` | `SerialLink`（真串口）/ `MockLink`（模拟 MCU，带物理量耗时）/ `Session`（指令→OK→DONE） |
+| `sorting/core/machine.py` | 顶层状态机 BOOT→SELF_TEST→STANDBY→ARMED→RUNNING→FINISH，FAULT 可从任意态进入 |
+| `sorting/core/sequence.py` | 单件抓放序列，用生成器写；`check` 的结果回填决定走料仓还是 NG 跳过 |
+| `sorting/display/console.py` | 显示状态（赛规要求序号/名称/总数，每件刷新）。真机换 framebuffer 版，接口不变 |
+| `sorting/config/machine.toml` | **全部机器参数**。换场只改这一个文件，不重新编译 |
+
+**两条不能破的约定**：
+
+1. **主线程是链路上唯一的写入方。** 串口一问一答，两个线程同时写会把 `GOTO` 和 `Z` 拼成废指令。
+2. **`Action` 序列与执行分开。** 动作顺序是纯函数（可断言），怎么动硬件留在 `app/`。
+
+---
+
+## 六、关于仓库外的一份源码副本
 
 调研时从实验室 Jetson 上拷了一份平台源码（8MB）到本地 `D:\实验室设备学习\code\`，
 **仅用于阅读，刻意没有放进本仓库**（`.gitignore` 也已挡掉 `code/`）。

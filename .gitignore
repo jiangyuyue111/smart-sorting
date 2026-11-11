@@ -36,6 +36,14 @@ datasets/
 weights/
 runs/
 
+# 整卡系统镜像（250MB+）——放本地就行，绝不入库
+images/
+*.img
+*.img.xz
+*.img.gz
+*.img.md5
+*.img.md5sum
+
 # 密钥 / 凭据 —— 绝不入库
 *.pem
 *.key
@@ -49,6 +57,15 @@ id_ed25519*
 # 排查用临时脚本
 box_*.sh
 *_recon*.sh
+
+# 演示/测试产生的输出（报告、屏幕帧、CSV）——需要时现场重跑即可
+out/
+
+# 整卡备份（264MB，SD 卡克隆）——本地保留，绝不入库
+backup_starryos_card_*/
+
+# 非本团队代码：实验室那套平台带出来的视觉脚本（无 LICENSE，见红线）
+视觉模块.py
 
 # 系统与编辑器
 .DS_Store

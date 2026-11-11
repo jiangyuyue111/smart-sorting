@@ -150,7 +150,9 @@ tr.total td{background:var(--surface-2);font-weight:600}
 .pill{
   display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:600;
   padding:2px 7px;border-radius:99px;white-space:nowrap;
+  margin-right:.45em;vertical-align:1px;
 }
+td .pill:only-child{margin-right:0}
 .pill.p0{background:var(--accent-soft);color:var(--accent)}
 .pill.p1{background:var(--surface-2);color:var(--ink-2)}
 .pill.p2{background:var(--warn-soft);color:var(--warn)}
@@ -250,8 +252,8 @@ footer{
   <p class="deck">为什么选智能分拣、机械与控制系统怎么定、识别走哪条路线、要花多少钱、以及进度如何排布。</p>
   <div class="byline">
     <div>提交人 <b>蒋玉月</b></div>
-    <div>版本 <b>v3.0 · 平台与识别路线改判</b></div>
-    <div>日期 <b>2026-10-20</b></div>
+    <div>版本 <b>v3.1 · 2026-10-27</b></div>
+    <div>日期 <b>2026-10-27</b></div>
     <div>依据 <b>赛规原文 + 评分与规则 + 本团队实测</b></div>
   </div>
 </header>
@@ -262,7 +264,7 @@ footer{
   <h2>目录</h2>
   <ol>
     <li><a href="#s1"><span class="n">01</span><span>规则约束与设计公理</span></a></li>
-    <li><a href="#s2"><span class="n">02</span><span>赛项选择论证</span></a></li>
+    <li><a href="#s2"><span class="n">02</span><span>赛项选择</span></a></li>
     <li><a href="#s3"><span class="n">03</span><span>总体方案</span></a></li>
     <li><a href="#s4"><span class="n">04</span><span>主控与系统选型</span></a></li>
     <li><a href="#s5"><span class="n">05</span><span>子系统选型</span></a></li>
@@ -271,7 +273,7 @@ footer{
     <li><a href="#s8"><span class="n">08</span><span>进度排期</span></a></li>
     <li><a href="#s9"><span class="n">09</span><span>风险与对策</span></a></li>
     <li><a href="#s10"><span class="n">10</span><span>需要老师支持</span></a></li>
-    <li><a href="#sA"><span class="n">附录</span><span>平台实测与备选路线</span></a></li>
+    <li><a href="#sA"><span class="n">附录</span><span>备选路线与开题前验证</span></a></li>
   </ol>
 </nav>
 
@@ -288,10 +290,10 @@ footer{
         <tbody>
           <tr><td>参赛赛项</td><td>智能分拣</td><td>桌面设备便于反复测试；分类必须同时匹配形状、颜色和表面信息</td></tr>
           <tr><td>机械构型</td><td>紧凑直角坐标龙门 XY+Z<br>目标外形不超 350 × 350 × 450mm；设计目标 340 × 340 × 430mm</td><td>托盘按 160 × 160mm 起步；六盒 2 列 × 3 行，先做尺寸包络 CAD 再采购</td></tr>
-          <tr><td>控制架构</td><td>SG2002（AKA-00 Linux）做视觉与显示<br>+ STM32F407 做实时运动</td><td>本团队已在该板上实测：相机取帧 ~10ms、TPU 推理 40ms、端到端 174ms／5.7fps。Linux 非实时，脉冲必须下沉到 MCU</td></tr>
+          <tr><td>控制架构</td><td>树莓派做视觉与显示<br>+ STM32F407 做实时运动</td><td>SG2002 实测后否决：128MB 无 swap 内存跑不动 OpenCV 聚类，且该镜像内核无任何显示驱动（见第 04 节四条阻塞）。Linux 非实时，脉冲仍必须下沉到 MCU</td></tr>
           <tr><td>末端执行器</td><td>浮动吸盘 + 真空压力检测<br>预留旋转复拍接口</td><td>先用实物验证各类货物吸取；无法稳定吸取的类别再选夹爪或专用吸头</td></tr>
           <tr><td>识别路线</td><td>经典 CV 为主<br>YOLO on TPU 为可切换备通道</td><td>只打初赛且物料自备，类别是<strong>闭集</strong>，不需要现场建档；两条通道的代码与运行时本团队均已具备，切换成本接近零</td></tr>
-          <tr><td>预算 / 进度</td><td>已标价项加预留 ≥ ¥2,507<br>主控与相机已在手，不计入</td><td>以尺寸与识别验证通过为采购门槛；驱动器已定为 TMC2209，无待询价项</td></tr>
+          <tr><td>预算 / 进度</td><td>已标价项加预留 ≥ ¥3,025<br>相机已在手，不计入</td><td>以尺寸与识别验证通过为采购门槛；驱动器已定为 TMC2209，无待询价项。主控与屏需采购（原方案按已有器材计 ¥0，现改为实购）</td></tr>
         </tbody>
       </table>
     </div>
@@ -362,52 +364,22 @@ footer{
 
 <!-- ============ 02 ============ -->
 <section id="s2">
-  <div class="shead"><span class="snum">02</span><h2 class="sh">赛项选择论证</h2></div>
-  <p class="sub">智能+赛道下设智能搬运、智能分拣、智能救援三个赛项，以下为横向对比。</p>
+  <div class="shead"><span class="snum">02</span><h2 class="sh">赛项选择</h2></div>
+  <p class="sub">智能+赛道下设搬运、分拣、救援三项。选分拣，理由是它把不确定性压缩到了最小。</p>
 
   <div class="tscroll">
     <table>
-      <thead><tr><th>维度</th><th>智能搬运</th><th>智能分拣</th><th>智能救援</th></tr></thead>
+      <thead><tr><th>维度</th><th>智能搬运</th><th>智能分拣（选）</th><th>智能救援</th></tr></thead>
       <tbody>
-        <tr>
-          <td><strong>场地依赖</strong></td>
-          <td>2400mm 见方场地，含电动转盘、粗加工区、暂存区、行车区，调试须约场地</td>
-          <td><span class="pill yes">桌面级工位</span>整机 350mm 见方以内，一张桌角即可测</td>
-          <td>2400mm 见方对抗场地，需对手陪练</td>
-        </tr>
-        <tr>
-          <td><strong>定位导航</strong></td>
-          <td>须自主定位，投影越出车道立即停赛</td>
-          <td><span class="pill yes">不需要</span>相机固定在机架上</td>
-          <td>须高速移动、避障、越障</td>
-        </tr>
-        <tr>
-          <td><strong>评分特性</strong></td>
-          <td>连续精度分：同心环 1 环 15 分递减至 6 环 1 分，另需码垛</td>
-          <td><span class="pill yes">近似二值</span>分类正确即 5 分/件</td>
-          <td>对抗计件，方差最大</td>
-        </tr>
-        <tr>
-          <td><strong>机械难度</strong></td>
-          <td>极高：抓回转体、车上载 3 件、旋转转盘上取件、精准放环、码垛</td>
-          <td>中等：2~3 轴 + 吸盘</td>
-          <td>高：禁止机械臂抓取、禁止放车上，只能推铲</td>
-        </tr>
-        <tr>
-          <td><strong>可复现性</strong></td>
-          <td>中，须反复上场地刷分</td>
-          <td><span class="pill yes">高</span>同一盘货物可无限次重跑</td>
-          <td>低，对手行为不可控</td>
-        </tr>
+        <tr><td><strong>场地依赖</strong></td><td>2400mm 见方，须约场地</td><td><span class="pill yes">桌面级</span>一张桌角即可测</td><td>2400mm 对抗场地，需陪练</td></tr>
+        <tr><td><strong>评分特性</strong></td><td>连续精度分，只能靠反复上场地刷分</td><td><span class="pill yes">近似二值</span>分类正确即得分</td><td>对抗计件，方差最大</td></tr>
+        <tr><td><strong>可复现性</strong></td><td>中</td><td><span class="pill yes">高</span>同一盘货物可无限次重跑</td><td>低，对手行为不可控</td></tr>
       </tbody>
     </table>
   </div>
 
-  <h3>为什么排除搬运</h3>
-  <p>搬运的分数是<strong>落点精度的连续函数</strong>——1 环 15 分、6 环 1 分，要把成绩做上去只能靠几十次上场地迭代，投入产出比明显低于分拣。此外它还要叠加三座山：电动转盘（6~10 秒/转）上定时取件、车上同时载运 3 件、以及第二批物料的码垛。与之相对，分拣的<strong>分数不按环形精度递减</strong>，但货物必须完全进入正确储物盒；盒口、标定和落点容差仍需实测。</p>
-
-  <h3>为什么排除救援</h3>
-  <p>救援是双机对抗，且规则禁止机械臂抓取、禁止把目标放在车上——只能推或铲。结果高度依赖对手行为，无法在赛前通过迭代收敛，属于押注型赛项，风险不可控。</p>
+  <p>搬运的分数是落点精度的连续函数（1 环 15 分递减到 6 环 1 分），要把成绩做上去只能靠几十次上场地迭代，还要叠加电动转盘定时取件、车上同时载运 3 件、第二批码垛三座山。救援是双机对抗，且禁止机械臂抓取、只能推铲，结果依赖对手行为，无法赛前收敛。</p>
+  <p><strong>分拣是三者中唯一能在实验台上把不确定性刷下去的赛项</strong>——这是选它的全部理由。</p>
 </section>
 
 <!-- ============ 03 ============ -->
@@ -417,7 +389,7 @@ footer{
 
   <figure>
     <div class="figbox">
-      <svg viewBox="0 0 840 480" role="img" aria-label="系统架构：UVC 相机以 USB 送入 SG2002 主控（AKA-00 Linux），主控完成手眼标定、形状颜色识别、取件规划与显示渲染，并经 MIPI-DSI 驱动机载屏；主控再经串口把坐标指令下发到 STM32F407 运动控制器，该链路为实时边界；控制器发 STEP/DIR 脉冲驱动 X/Y/Z 三轴步进，并以 GPIO 控制真空泵、电磁阀与压力开关回读；整套系统由机内 12V 锂电池组供电。">
+      <svg viewBox="0 0 840 480" role="img" aria-label="系统架构：UVC 相机以 USB 送入树莓派主控，主控完成手眼标定、形状颜色识别、取件规划与显示渲染，并经 HDMI 驱动机载屏；主控再经串口把坐标指令下发到 STM32F407 运动控制器，该链路为实时边界；控制器发 STEP/DIR 脉冲驱动 X/Y/Z 三轴步进，并以 GPIO 控制真空泵、电磁阀与压力开关回读；整套系统由机内 12V 锂电池组供电。">
         <defs>
           <marker id="arInk" class="mk-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 z"/>
@@ -444,7 +416,7 @@ footer{
 
           <!-- main controller -->
           <rect class="dgb" x="120" y="104" width="480" height="118" rx="6"/>
-          <text class="dgt" x="136" y="128">主控 · SG2002（AKA-00 Linux）</text>
+          <text class="dgt" x="136" y="128">主控 · 树莓派（Linux）</text>
           <rect class="dgb" x="136" y="140" width="140" height="28" rx="4"/>
           <text class="dgs" x="148" y="158">手眼标定</text>
           <rect class="dgb" x="288" y="140" width="140" height="28" rx="4"/>
@@ -458,12 +430,12 @@ footer{
 
           <!-- display -->
           <rect class="dgb" x="648" y="104" width="170" height="118" rx="6"/>
-          <text class="dgt" x="662" y="128">机载屏 · MIPI-DSI</text>
-          <text class="dgs" x="662" y="148">5 in · 480×854 · 非触摸</text>
+          <text class="dgt" x="662" y="128">机载屏 · HDMI</text>
+          <text class="dgs" x="662" y="148">5–7 in · 非触摸</text>
           <text class="dgs" x="662" y="168">序号 / 名称 / 图片 / 数量</text>
-          <text class="dgs" x="662" y="188">framebuffer 直绘</text>
+          <text class="dgs" x="662" y="188">framebuffer / KMS 直绘</text>
           <line class="dga" x1="600" y1="163" x2="644" y2="163" marker-end="url(#arInk)"/>
-          <text class="dgd" x="622" y="155" text-anchor="middle">DSI</text>
+          <text class="dgd" x="622" y="155" text-anchor="middle">HDMI</text>
 
           <!-- realtime boundary -->
           <line class="dga-acc" x1="360" y1="222" x2="360" y2="254" marker-end="url(#arAcc)"/>
@@ -511,7 +483,7 @@ footer{
   </figure>
 
   <h3>机器布局</h3>
-  <p>布局改为“托盘侧置 + 储物盒 2 列 × 3 行”：当前概念布局为 350 × 340 × 430mm，X 向已贴近赛规上限、没有加工公差；下一版 CAD 必须压缩到 ≤ 340 × 340 × 430mm，或重排盒体后再冻结加工尺寸。托盘采用规则最低尺寸 160 × 160mm，盒体先按 84mm 外宽建模。此尺寸是 CAD 起点，须用含机架、线轨、电机、相机、屏幕和接插件的完整包络复核。</p>
+  <p>布局改为“托盘侧置 + 储物盒 2 列 × 3 行”：当前概念布局为 350 × 340 × 430mm，X 向已贴近赛规上限、没有加工公差；下一版 CAD 必须压缩到 ≤ 340 × 340 × 430mm，或重排盒体后再冻结加工尺寸。托盘采用规则最低尺寸 160 × 160mm，盒体先按 84mm 外宽建模——这是 CAD 起点，不是定稿。</p>
   <p><strong>卡住包络的不是高度，是 X 向行程。</strong>高度这一侧其实很宽松：按≈3.6mm 镜头、≈250mm 工作距离，相机镜头到托盘面约 250mm，整机高度只用到 300mm 出头，离 450mm 还有百余毫米余量。真正没有余量的是 X 向——吸盘尖点要从最左一列盒心（约 x=142）走到托盘最右侧的取件点（约 x=415），约 <em>273mm</em>；而横梁长度被 350mm 封顶，扣掉 Z 滑座占位后有效行程只剩约 <em>290mm</em>。两者只差十几毫米，且全部要吃在结构公差里。</p>
   <p>由此得到下一版 CAD 的第一优先级：<strong>盒区宽度是 X 向行程的直接输入，盒区每加宽 1mm，行程就少 1mm</strong>。正确顺序是先确认储物盒在能装下 4 件 40mm 货物的前提下最小能做到多少、托盘与盒区如何相对摆放，再反推横梁与行程；若反过来先定外形再往里塞盒子，X 向必超。若实测确认 84mm 盒体装不下 4 件 40mm，可选的换法有两条：盒区改横向排布并接受更长的横梁、或把六盒做成可旋转的盒盘，让末端只需到达一个投料位。</p>
 
@@ -590,53 +562,59 @@ footer{
 <!-- ============ 04 ============ -->
 <section id="s4">
   <div class="shead"><span class="snum">04</span><h2 class="sh">主控与系统选型</h2></div>
-  <p class="sub">这是本版相对 v2.1 改动最大的一节：结论从"用树莓派"翻转为"用 SG2002"，以下是翻转的依据。</p>
+  <p class="sub">控制与显示必须全部机载：规则要求装置上装一块<strong>仅具显示功能</strong>的屏，并禁止比赛中触碰笔记本或任何形式的遥控。结论是 <strong>树莓派 + STM32F407</strong>。这个结论在 v3.0 里是反过来的（当时选 SG2002、树莓派备选）；2026-10-27 的实机验证把它推翻了，理由见下。</p>
 
-  <p>规则要求装置上装一块<strong>仅具显示功能</strong>的显示屏，用于显示序号、货物名称、货物图片与数量；同时严禁比赛中触碰笔记本或任何形式的遥控。因此控制与显示必须全部机载，笔记本不能充当主控。</p>
-
-  <h3>翻转的依据：本团队自己的实测数据</h3>
-  <p>v2.1 判定 SG2002 为"否"，理由有三条：无 HDMI、内存偏紧、NPU 用不上。这三条在纸面上都成立。但在编写本版之前，本团队已经在该平台上跑完了完整管线，实测数据推翻了这些估计：</p>
+  <h3>为什么放弃 SG2002：四条实测阻塞</h3>
+  <p>SG2002（LicheeRV Nano）是本团队用得最熟的平台，也是 v3.0 时的首选。2026-10-27 我们把它重新烧写、开机登录并逐项实测之后，判定它不能承担本赛题的主控。四条阻塞相互独立，任意一条都足以否决：</p>
   <div class="tscroll">
     <table>
-      <thead><tr><th>阶段</th><th class="num">SG2002 + AKA-00 Linux</th><th class="num">SG2002 + StarryOS</th><th>说明</th></tr></thead>
+      <thead><tr><th>阻塞项</th><th>实测证据</th><th>能否补救</th></tr></thead>
       <tbody>
-        <tr><td>相机取帧</td><td class="num">~10 ms</td><td class="num">255 ms</td><td>差距 100% 来自 USB UVC 驱动成熟度</td></tr>
-        <tr><td>预处理（C）</td><td class="num">~120 ms</td><td class="num">143 ms</td><td></td></tr>
-        <tr class="total"><td>TPU Forward</td><td class="num">40 ms</td><td class="num">40 ms</td><td><strong>与操作系统无关</strong></td></tr>
-        <tr><td>C 语言 NMS</td><td class="num">4 ms</td><td class="num">4 ms</td><td></td></tr>
-        <tr class="total"><td>端到端</td><td class="num">~174 ms · 5.7 fps</td><td class="num">~481 ms · 2.1 fps</td><td></td></tr>
+        <tr><td><strong>① 内存只有 128 MB 且无 swap</strong></td><td>串口实测：<code>import cv2</code> 成功（7.7 s）后，紧随的 <code>import numpy</code> 直接把系统打到 <code>INIT: no more processes left in this runlevel</code></td><td><strong>不能</strong>。架构性限制，改代码救不回来</td></tr>
+        <tr><td><strong>② 摄像头不是 V4L2</strong></td><td>只有 <code>/dev/cvi-vi</code>、<code>/dev/cvi-vpss</code>、<code>/dev/cvi-isp</code> 这套 CVITEK 私有栈，无 <code>/dev/video*</code></td><td>能绕，但取帧必须先打通私有接口</td></tr>
+        <tr><td><strong>③ 镜像内核没有任何显示驱动</strong></td><td>内核是未压缩裸 Image，对 <code>boot.sd</code> 做 of_match 字符串计数：<code>sitronix,st7789</code>／<code>cvitek,fb</code>／<code>cvitek,vo</code> 各只出现 <strong>1</strong> 次（仅在设备树），而对照组 <code>snps,dw-apb-ssi</code>、<code>cvitek,cv181x-thermal</code> 为 <strong>2</strong> 次</td><td>要重编整套 BSP 内核</td></tr>
+        <tr><td><strong>④ 板上不能就地开发</strong></td><td>无 <code>gcc</code>、无 <code>v4l2-ctl</code>，<code>/lib/modules/</code> 为空目录、不能 <code>insmod</code></td><td>任何驱动改动都须走完整交叉编译链路</td></tr>
       </tbody>
     </table>
   </div>
-  <p>关键结论有两条：<strong>① TPU 硬件推理与操作系统无关</strong>，两边都是 40 ms；<strong>② 端到端差距完全来自驱动层</strong>。也就是说，v2.1 说的"NPU 用不上"只在识别走纯经典 CV 时成立——而本版识别已改为"CV 为主、YOLO on TPU 备"，NPU 从摆设变成了方案的一部分。</p>
+  <p>第 ① 条是决定性的：本赛题的识别对象是<strong>现场抽签货物的形状 + 颜色聚类</strong>，OpenCV 是刚需，128 MB 没有余量。第 ③ 条只决定"能不能有屏"，即使修好也过不了第 ① 条——这也是不再往屏幕路线投入的原因。</p>
 
-  <h3>三条原否决理由的逐条复核</h3>
+  <h3>显示路线：三条都走不通</h3>
+  <p>规则要求机载高亮屏，所以"能不能点屏"必须先判死或判活。三条路逐一排除：</p>
   <div class="tscroll">
     <table>
-      <thead><tr><th>v2.1 的否决理由</th><th>复核结论</th></tr></thead>
+      <thead><tr><th>路线</th><th>核查结果</th><th>结论</th></tr></thead>
       <tbody>
-        <tr><td>无 HDMI，接不了高亮屏</td><td><span class="pill p1">成立，但不是死路</span>SoC 确无 HDMI PHY。改用 MIPI-DSI 直连 5 英寸 ST7701 面板（480×854，非触摸），走 framebuffer 直绘。<strong>代价是屏幕尺寸与亮度选择余地小</strong>，这是本路线最实在的短板，见下方"残余风险"</td></tr>
-        <tr><td>256MB 内存跑 OpenCV + 显示栈偏紧</td><td><span class="pill yes">已推翻</span>该镜像自带 OpenCV，实机可用内存约 127MB。本方案整盘只识别一次、每帧只处理 640×480，内存不是瓶颈。代码侧另有"无 numpy 依赖"的纯 Python 实现可退</td></tr>
-        <tr><td>NPU 优势用不上</td><td><span class="pill no">前提已变</span>识别改为双通道后，TPU 成为备通道的落点；且四语言运行时、模型转换流程均已跑通</td></tr>
+        <tr><td>① 换用带屏版镜像</td><td>上游 AKA-00 确有 <code>-screen</code> 变体，但其设备树 <code>model = "HD05085A Board"</code>，是 5 寸 MIPI-DSI 载板，走 <code>cvitek,vo</code> + <code>cvitek,mipi_tx</code>；而 LicheeRV Nano 的屏是 SPI ST7789，两者硬件不同</td><td><strong>不通</strong>，镜像不能通用</td></tr>
+        <tr><td>② 改设备树把节点打开</td><td><code>st7789@0</code> 节点确实在设备树里、<code>status = "disabled"</code>，但驱动字符串在内核中不存</td><td><strong>不通</strong>，改完仍无 <code>/dev/fb0</code></td></tr>
+        <tr><td>③ 重编 BSP 内核</td><td>需拉全套 CVITEK SDK、改 U-Boot pinmux、重烧固件</td><td>可行但<strong>不该做</strong>：周级工作量，且仍受 128 MB 内存限制</td></tr>
       </tbody>
     </table>
   </div>
+
+  <h3>一处必须撤回的旧判断</h3>
+  <div class="note">
+    <p><b>v3.0 写过"该镜像自带 OpenCV，实机可用约 127MB"——这句是错的。</b>那是把 128 MB 的<em>总量</em>误当成<em>可用量</em>。实际情况是无 swap 的 128 MB 物理内存，OpenCV 一加载就逼近上限，这正是第 ① 条阻塞的来源。上一版据此得出的"内存不是瓶颈"结论需要撤回。</p>
+  </div>
+
+  <h3>为什么是树莓派</h3>
+  <p>它不是"更强"，而是"没有短板"：HDMI 让显示屏完全不受限（规则只要求"高亮"，不限接口与尺寸）；V4L2 相机栈是标准的；OpenCV 原生可用；128 MB 那条内存红线直接消失；故障可替换（换卡、换板）。</p>
+  <p>代价是它不在手、需要采购（第 07 节按 ¥420 计入），以及在 SG2002 上跑通的管线要重跑一遍。但那份 174 ms／5.7 fps 的成绩是<strong>TPU 推理</strong>的数字，而本方案的识别路线已定为经典 CV 聚类、不走 TPU——因此这项损失的账面影响没有看起来那么大。</p>
 
   <h3>为什么仍然必须拆成两颗芯片</h3>
-  <p>Linux 不是实时系统。直接在 GPIO 上软件发脉冲会产生毫秒级抖动，对步进电机就是丢步——而丢一步的后果可能是机器头撞翻整盘货物，一轮报废。把脉冲生成下沉到 MCU 的硬件定时器，是这套架构的可靠性底线。<strong>这一条与选 Pi 还是选 SG2002 无关，两种方案都必须拆。</strong></p>
-  <p>分工是：SG2002 只做"决策"（识别、规划、显示、看门狗），STM32F407 只做"脉冲"（定时器出 STEP/DIR、梯形加减速、压力开关回读）。任何实时性要求都不落在 Linux 上。</p>
+  <p>Linux 不是实时系统。直接在 GPIO 上软件发脉冲会产生毫秒级抖动，对步进电机就是丢步——丢一步的后果可能是机器头撞翻整盘货物，一轮报废。把脉冲生成下沉到 MCU 的硬件定时器，是这套架构的可靠性底线。<strong>这一条与选 Pi 还是选 SG2002 无关，两种方案都必须拆。</strong></p>
+  <p>分工是：树莓派只做"决策"（识别、规划、显示、看门狗），STM32F407 只做"脉冲"（定时器出 STEP/DIR、梯形加减速、压力开关回读）。任何实时性要求都不落在 Linux 上。</p>
+
+  <h3>SG2002 退出主控之后的位置</h3>
+  <p>它没有被闲置。该板现已烧写完成并启动正常（root 可登录、WiFi 可用、AKA-00 全套功能在跑），可作为识别算法的<strong>对照验证平台</strong>：用来确认检测输出的数据结构、上位机该怎么接、显示页该长什么样。它不承担赛题。</p>
+  <div class="note">
+    <p><b>一条合规约束：</b>AKA-00 采用 <strong>PolyForm Noncommercial 1.0.0</strong>——仅限非商业用途，分发须随附条款。若本作品日后走向产品化，不能以其为底座；本仓库也不收录其任何源码。</p>
+  </div>
 
   <h3>残余风险：屏幕</h3>
   <div class="note">
-    <p><b>这是本路线唯一没有把握的地方，必须提前处理。</b>规则要求"高亮显示屏"，而 SG2002 只能接 MIPI-DSI 面板，可选型号被限定在 Sipeed 适配过的 ST7701 系列，且<strong>官方未公布亮度参数</strong>。</p>
-    <p>处置：① 屏幕到货后实测亮度与可视角度，并拍照留证；② 若亮度不满足要求，退路是加装 MIPI-DSI 转 HDMI 桥接芯片换用高亮屏（增加自研工作量），或退回树莓派路线。这一项列入<strong>附录 A 的验证实验</strong>，在冻结方案前完成。</p>
+    <p><b>已从"平台级风险"降为"器件级风险"。</b>规则要求"高亮显示屏"，HDMI 便携屏同样需要实测亮度与可视角度并拍照留证；好处是不再受接口与型号限制——不达标直接换一块屏即可，不牵动平台选型。</p>
   </div>
-
-  <h3>关于启动时间</h3>
-  <p>Linux 冷启动约 20~30 秒，在本赛项不构成问题：装置在调试阶段即已上电，<strong>"启动"按钮只负责触发程序</strong>，计时从裁判发令开始，与系统启动时间无关。</p>
-
-  <h3>为什么不再选树莓派</h3>
-  <p>并非树莓派不好，而是它已经不带来额外收益：主控、相机本团队都已在手，SG2002 路线的软件栈已经跑通并存有可复现的性能报告，换平台等于把已验证的东西重新验证一遍。树莓派保留为<strong>备选</strong>——若屏幕或驱动层出现问题，它是最快的退路，因为它的软件栈什么都不缺，HDMI 也让屏幕选择不受限。</p>
 </section>
 
 <!-- ============ 05 ============ -->
@@ -682,7 +660,7 @@ footer{
         <tr><td>镜头</td><td>M12 定焦，焦距<strong>待复核</strong><br><span class="mono">候选：3.6mm（广角）或 6mm（若传感器为 1/3"）</span></td><td>若传感器为 1/3"，6mm 在 WD 250mm 处即可覆盖 200mm 视场，<strong>畸变远小于 3.6mm 广角</strong>，能显著减轻第 06 节的标定负担。到货后按实际芯片尺寸算一次再定</td></tr>
         <tr><td>光源</td><td>可调光环形 LED，Ra &gt; 90，配乳白亚克力漫射板</td><td>货物表面按要求附有模拟污渍与缺陷图形，显色指数不足会把红、橘、粉混淆</td></tr>
         <tr><td>遮光</td><td>四周挡板 + 顶部遮光罩</td><td>阻断环境光漂移。上午调好的阈值下午失效，几乎都源于此。<strong>这是经典 CV 路线成立的前提</strong></td></tr>
-        <tr><td>屏幕</td><td>5 in MIPI-DSI ST7701，480×854，<strong>非触摸</strong></td><td>非触摸反而更合规——规则要求"仅具显示功能"，不带触摸就不存在被误判为交互装置的风险。亮度是残余风险，见第 04 节</td></tr>
+        <tr><td>屏幕</td><td>5–7 in HDMI IPS 便携屏，<strong>非触摸</strong></td><td>非触摸反而更合规——规则要求"仅具显示功能"，不带触摸就不存在被误判为交互装置的风险。HDMI 接口不受型号限制，亮度是残余风险，见第 04 节</td></tr>
         <tr><td>显示实现</td><td>用户态直写 <code>/dev/fb0</code></td><td>纯本地、无网络、无交互，符合"仅显示"要求。<strong>此项尚未在实机验证</strong>，列为 W1 首要任务</td></tr>
       </tbody>
     </table>
@@ -741,7 +719,7 @@ footer{
   <p><strong>视差需要实测并标定。</strong>货物是有高度的（最大 40mm），同一个像素在货物顶面与托盘面上对应的机器坐标并不相同。用 160mm 托盘四角加若干不同高度的量块建立标定样本，拟合出随高度变化的修正；若误差超过盒口容差，就按 Z 高度做补偿，不能靠做大盒口把定位误差蒙过去。</p>
 
   <h3>识别算法</h3>
-  <p>本版把识别定为<strong>"经典 CV 为主 + YOLO on TPU 备"的双通道</strong>，而不是二选一。原因是本团队的两种情况同时成立：CV 侧有完整可用的实现路径，YOLO 侧的"训练 → ONNX → cvimodel → CVI_NN"全流程也已跑通四次，两种选择都近乎零成本，没有理由押注单一路线。</p>
+  <p>本方案的识别是<strong>"经典 CV 为主 + YOLO on TPU 备"的双通道</strong>，不是二选一。因为两条路的实现成本都近乎为零：CV 侧有完整可用的实现路径，YOLO 侧的"训练 → ONNX → cvimodel → CVI_NN"全流程也已跑通四次。没有理由押注单一路线。</p>
   <div class="tscroll">
     <table>
       <thead><tr><th>条件</th><th>主通道：经典 CV</th><th>备通道：YOLO on TPU</th></tr></thead>
@@ -754,7 +732,7 @@ footer{
       </tbody>
     </table>
   </div>
-  <p>之所以现在可以走闭集（固定 6 类），是因为<strong>只打初赛</strong>且<strong>物料自备</strong>——类别由我们决定，不存在"现场公布未知货物"的场景。这也正是 v2.1 用"决赛要现场换货"论证必须走纯启发式 CV 的前提，本版已不成立。</p>
+  <p>之所以可以走闭集（固定 6 类），是因为<strong>只打初赛</strong>且<strong>物料自备</strong>——类别由我们决定，不存在"现场公布未知货物"的场景。</p>
 
   <h3>经典 CV 通道</h3>
   <div class="tscroll">
@@ -805,13 +783,11 @@ footer{
   <p>12 件约 <strong>105 秒</strong>，占 180 秒预算的 58%，留出约 <strong>75 秒容错</strong>。</p>
   <div class="note">
     <p><b>这 75 秒不是"可以慢慢来"的余量，而是给两次意外重试的预算。</b>一次吸空重试约多花 3 秒，一次误判导致的返工可能多花 10 秒以上。一旦开始频繁重试，单件时间会成倍上升——这正是本方案坚持"跳过而不重试"的原因（见第 01 节）。</p>
-    <p>此外，单件超过 15 秒本身<strong>不违规</strong>：15 秒是"完全无动作"的判死线，不是每件的配额。真正要守的是总量 180 秒，以及任何时候都不要停住。</p>
   </div>
   <p>顺序按"同类连做 + 组间最近邻"规划，减少空跑；每件完成后立即刷新并自检四字段。节拍必须在屏幕、气泵和电池同时工作、且整机封闭的状态下测量。</p>
 
   <h3>任务调度与心跳保活</h3>
-  <p>待机阶段生成完整任务队列：按类别分组，组内按空间距离排序，组间最近邻——同类两件连着做，避免盒子反复定位。开赛后只做"出队 → 执行 → 刷新显示 → 出队"，不再有任何决策性计算。</p>
-  <p>流程为：全盘成像 → 识别并分入 6 类 → 建立任务队列 → 逐件取放 → 压力确认吸牢 → 入盒破真空 → 抬起 → 刷新四字段显示 → 自检通过 → 处理下一件。</p>
+  <p>待机阶段生成完整任务队列：按类别分组，组内按空间距离排序，组间最近邻——同类两件连着做，避免盒子反复定位。开赛后的循环只有一条：<strong>出队 → 定位取件 → 压力确认吸牢 → 入盒破真空 → 抬起 → 刷新四字段显示 → 自检 → 下一件</strong>，不再有任何决策性计算。</p>
   <div class="note">
     <p><b>心跳规则：任何 5 秒内没有发出运动指令，必须触发一次微动作。</b>这是对 15 秒看门狗的最后一道保险。微动作可以是 Z 轴抬起 2mm，也可以是开始转向下一件的路径。</p>
     <p>这条规则与"宁可少分也不要放错"不冲突——<strong>跳过这件 ≠ 停在那里</strong>。判不出来就立刻去下一件，装置始终在动。</p>
@@ -869,7 +845,7 @@ footer{
       </tbody>
     </table>
   </div>
-  <p>本版改回 <strong>TMC2209 开环驱动</strong>，取消 v2.1 的闭环步进方案：闭环电机配编码器驱动器当时是"待询价"状态，属于未定价的风险项；而本任务的定位精度要求（盒口容差）远低于闭环的精度能力，开环 + 限位开关完全够用。TMC2209 的 StallGuard 还能当软限位与堵转检测，反而更省事。</p>
+  <p>选 <strong>TMC2209 开环驱动</strong>：本任务的定位精度要求（盒口容差）远低于闭环的能力，开环 + 限位开关完全够用；TMC2209 的 StallGuard 还能当软限位与堵转检测，反而更省事。闭环步进配编码器驱动器价格未定，属于未定价的风险项，不采用。</p>
 
   <h3>抓取气路</h3>
   <div class="tscroll">
@@ -910,15 +886,15 @@ footer{
     <table>
       <thead><tr><th>物料</th><th>规格</th><th class="num">数量</th><th class="num">单价</th><th class="num">小计</th><th>优先级</th></tr></thead>
       <tbody>
-        <tr><td>机载显示屏</td><td class="mono">5 in MIPI-DSI ST7701，480×854，非触摸</td><td class="num">1</td><td class="num">¥150</td><td class="num">¥150</td><td><span class="pill p0">P0</span></td></tr>
-        <tr><td>主控</td><td class="mono">SG2002 核心板（LicheeRV Nano），AKA-00 Linux</td><td class="num">1</td><td class="num">已在手</td><td class="num">¥0</td><td><span class="pill yes">已有</span></td></tr>
+        <tr><td>机载显示屏</td><td class="mono">5–7 in HDMI IPS 便携屏，非触摸</td><td class="num">1</td><td class="num">¥180</td><td class="num">¥180</td><td><span class="pill p0">P0</span></td></tr>
+        <tr><td>主控</td><td class="mono">树莓派 4B 2GB（含电源与系统卡）</td><td class="num">1</td><td class="num">¥420</td><td class="num">¥420</td><td><span class="pill p0">P0</span></td></tr>
         <tr><td>运动 MCU</td><td class="mono">STM32F407 最小系统板</td><td class="num">1</td><td class="num">¥35</td><td class="num">¥35</td><td><span class="pill p0">P0</span></td></tr>
         <tr><td>开关电源</td><td class="mono">DC12V 10A，调试用</td><td class="num">1</td><td class="num">¥60</td><td class="num">¥60</td><td><span class="pill p0">P0</span></td></tr>
         <tr><td>DC-DC 降压</td><td class="mono">12V → 5V 5A</td><td class="num">1</td><td class="num">¥25</td><td class="num">¥25</td><td><span class="pill p0">P0</span></td></tr>
         <tr><td>机内电池组</td><td class="mono">12V 10Ah + BMS</td><td class="num">1</td><td class="num">¥200</td><td class="num">¥200</td><td><span class="pill p0">P0</span></td></tr>
         <tr><td>一键启动按钮</td><td class="mono">带灯自锁，标注"启动"</td><td class="num">1</td><td class="num">¥15</td><td class="num">¥15</td><td><span class="pill p0">P0</span></td></tr>
         <tr><td>存储卡 / 线材 / 外壳</td><td class="mono">—</td><td class="num">1</td><td class="num">¥80</td><td class="num">¥80</td><td><span class="pill p1">P1</span></td></tr>
-        <tr class="total"><td colspan="4">显示主控电源小计</td><td class="num">¥565</td><td></td></tr>
+        <tr class="total"><td colspan="4">显示主控电源小计</td><td class="num">¥1,015</td><td></td></tr>
       </tbody>
     </table>
   </div>
@@ -932,13 +908,13 @@ footer{
         <tr><td>驱动与传动（含 TMC2209 驱动器）</td><td class="num">¥304</td></tr>
         <tr><td>抓取气路</td><td class="num">¥369</td></tr>
         <tr><td>视觉</td><td class="num">¥190</td></tr>
-        <tr><td>显示 / 主控 / 电源</td><td class="num">¥565</td></tr>
-        <tr><td>已标价基线（主控与相机已在手，不计入）</td><td class="num">¥2,180</td></tr>
-        <tr class="total"><td>含 15% 机动金</td><td class="num">¥2,507</td></tr>
+        <tr><td>显示 / 主控 / 电源</td><td class="num">¥1,015</td></tr>
+        <tr><td>已标价基线（相机已在手，不计入）</td><td class="num">¥2,630</td></tr>
+        <tr class="total"><td>含 15% 机动金</td><td class="num">¥3,025</td></tr>
       </tbody>
     </table>
   </div>
-  <p>本版<strong>没有"待询价"项</strong>——v2.1 里悬着的闭环驱动器已经用 TMC2209 解决。主控与相机为已有器材，按 ¥0 计入，若日后需要另购备件应单列。备件清单：TMC2209、同步带、吸盘、接插件、一张系统卡。</p>
+  <p><strong>没有"待询价"项。</strong>相机为已有器材，按 ¥0 计入；主控与显示屏改为采购后，第 07 节较 v3.0 增加了 ¥450（主控 ¥420 + 屏 ¥30 差价）。若日后需要另购备件应单列。备件清单：TMC2209、同步带、吸盘、接插件、一张系统卡。</p>
 
   <h3>采购红线</h3>
   <p>规则要求非标零件须自主设计和制造。因此<strong>不得购买成品装置套件拼装</strong>，也不宜购买成品 XY 平台或雕刻机拆件使用，存在被判"非自主设计"的风险；铝型材、线轨、同步带、步进电机、驱动器、传感器、相机、屏幕、泵阀属于标准零部件与元器件，可以采购。所有自制件的 STEP / DXF 源文件与设计图纸必须留存，检录与作品创意设计评分都要用到。另需注意规则中"<strong>同校作品雷同得 0 分</strong>"，立项前应确认校内是否有其他队伍报名同一赛项。</p>
@@ -1042,13 +1018,14 @@ footer{
       <thead><tr><th>风险</th><th>概率</th><th>影响</th><th>对策</th></tr></thead>
       <tbody>
         <tr><td>15 秒看门狗被触发</td><td>中</td><td>高</td><td><strong>结构性规避</strong>：识别全部放在待机阶段，开赛不再取图；串口等待设上限；判不出就跳过。另加心跳规则（5 秒无运动指令则微动作）</td></tr>
-        <tr><td>相机 UVC DMA 挂死（不可恢复）</td><td>中</td><td>高</td><td>开赛后不依赖相机；开赛前重启进程；备用一张系统卡</td></tr>
-        <tr><td>机载屏亮度不满足"高亮"要求</td><td>中</td><td>中</td><td><strong>本路线最主要的技术短板</strong>。屏幕到货即实测并拍照留证；不达标则换 MIPI-DSI→HDMI 桥接方案，或退回树莓派路线</td></tr>
+        <tr><td>相机 UVC DMA 挂死（不可恢复）</td><td>低</td><td>高</td><td>该现象是 SG2002 驱动层的实测问题，换到树莓派后概率显著下降（V4L2 为标准栈）。仍保留两层处置：开赛后不依赖相机；开赛前重启进程；备用一张系统卡</td></tr>
+        <tr><td>机载屏亮度不满足"高亮"要求</td><td>中</td><td>中</td><td>已降为<strong>器件级风险</strong>：屏幕到货即实测并拍照留证，不达标直接换一块 HDMI 屏，不牵动平台选型</td></tr>
         <tr><td>吸盘吸空 / 压力不达标</td><td>中</td><td>中</td><td>压力开关闭环，原地重吸 ≤2 次；仍失败则跳过该件并立即转向下一件（保持运动）</td></tr>
         <tr><td>识别误判导致放错盒</td><td>中</td><td>高</td><td>多特征投票 + 容忍半径门限；超阈值一律跳过。<strong>错 1 件最多毁 20 分，跳过只丢 10 分</strong></td></tr>
         <tr><td>机械与视觉接口未冻结</td><td>中</td><td>高</td><td>相机工作距离（决定焦距与视场）是全案唯一硬接口，必须最先定死；一旦变动，支架、遮光罩、行程余量全部返工</td></tr>
         <tr><td>X 向行程不足（273mm 需求 / 290mm 可用）</td><td>中</td><td>高</td><td>CAD 顺序必须是"先定盒体最小尺寸，再反推横梁"，不能反过来</td></tr>
-        <tr><td>显示刷新拖慢节拍</td><td>低</td><td>中</td><td>framebuffer 直绘 + 图片预裁；刷新与运动并行，但必须早于下一件的第一个动作</td></tr>
+        <tr><td>显示刷新拖慢节拍</td><td>低</td><td>中</td><td>framebuffer / KMS 直绘 + 图片预裁；刷新与运动并行，但必须早于下一件的第一个动作</td></tr>
+        <tr><td>树莓派采购延误或涨价</td><td>中</td><td>中</td><td>主控是唯一需外购的核心件，按 ¥420 预留并在 W1 下单；若断货，可用同价位 x86 小主机或 Jetson Nano 替代——同属标准 Linux + HDMI + V4L2，软件栈不动</td></tr>
         <tr><td>电池续航不足（赛中不可换电）</td><td>低</td><td>高</td><td>实测整机功耗后校核 12V 10Ah 容量，赛前必做满电全程实测</td></tr>
         <tr><td>检录被判定为非自主设计 / 同校雷同</td><td>低</td><td>高</td><td>留存全部图纸与源文件；不采购成品套件；确认实验室那套平台的作者是否同校且报名同赛项</td></tr>
       </tbody>
@@ -1064,79 +1041,59 @@ footer{
     <li><span class="box"></span><div><b>向组委会确认两件事</b>① 抽签是抽<em>组委会提供的标准货物品类</em>，还是抽本队自备的货件？若是前者，需要拿到品类清单与参考图，物料要按<strong>超集</strong>准备。② "每条信息得 2 分"是四个字段各 2 分（每件 8 分），还是每条记录 2 分？两者差一倍，直接影响显示模块的投入优先级。</div></li>
     <li><span class="box"></span><div><b>确认赛事时间节点</b>校赛、省赛的报名与比赛时间，用以复核第 08 节的排期是否需要压缩或改为并行推进。</div></li>
     <li><span class="box"></span><div><b>确认参赛名额与报名流程</b>目前两人分工为视觉/运动控制/文档与 CAD/加工，前者负载偏高。建议增加一名成员负责电气布线、驱动调试和整机回归；如只能两人，先删减旋转检查机构等扩展项并向老师确认加工支持。需确认报名时间与指导老师流程。</div></li>
-    <li><span class="box"></span><div><b>复核最新版发布稿与本校赛程</b>已按 350 × 350 × 450mm 包络、180 秒/轮、15 秒无动作看门狗、"形状且颜色"判据改方案；报名及校赛日期仍需向本校确认。</div></li>
     <li><span class="box"></span><div><b>加工条件</b>3D 打印机与激光切割机的使用权限及耗材。本队只参加初赛，不涉及决赛现场加工环节。</div></li>
-    <li><span class="box"></span><div><b>经费</b>第 07 节已标价基线 ¥2,180，含 15% 机动金 ¥2,507，<strong>无待询价项</strong>。主控与相机为已有器材，未计入。</div></li>
+    <li><span class="box"></span><div><b>经费</b>第 07 节已标价基线 ¥2,630，含 15% 机动金 ¥3,025，<strong>无待询价项</strong>。相机为已有器材，未计入；主控与显示屏需采购，较 v3.0 增加约 ¥450。</div></li>
     <li><span class="box"></span><div><b>场地</b>一张可长期占用的约 1m × 1m 实验台。本赛项无场地依赖，只需一张能持续放置装置的桌子用于反复回归测试。</div></li>
   </ul>
 </section>
 
 <!-- ============ 附录 A ============ -->
 <section id="sA">
-  <div class="shead"><span class="snum">附录 A</span><h2 class="sh">平台实测数据、备选路线与最小验证实验</h2></div>
-  <p class="sub">v2.1 判定 SG2002 为"否"，本版判定为"是"。翻转不是口味变化，而是因为平台已经从"实验室有一块板"变成"本团队跑通了完整管线并有实测数据"。本附录给出数据来源、备选路线的触发条件，以及开题前必须先做完的验证实验。</p>
+  <div class="shead"><span class="snum">附录 A</span><h2 class="sh">备选路线与开题前验证</h2></div>
+  <p class="sub">方案选定之后，真正需要写清楚的是两件事：什么情况下放弃它，以及开题前必须先做完哪些实验。</p>
 
-  <h3>数据从哪来</h3>
-  <p>第 04 节引用的性能数字不是估算，而是本团队在两种系统上跑同一套管线测出来的，已归档为性能报告。要点如下：</p>
-  <div class="tscroll">
-    <table>
-      <thead><tr><th>观测</th><th>结论</th></tr></thead>
-      <tbody>
-        <tr><td>TPU Forward 在两个系统上都是 40 ms</td><td><strong>硬件推理与操作系统无关</strong>。这条推翻了"换系统能提速推理"的直觉</td></tr>
-        <tr><td>相机取帧 10 ms（Linux）vs 255 ms（StarryOS）</td><td>端到端差距<strong>全部来自 USB UVC 驱动成熟度</strong>，不是算力</td></tr>
-        <tr><td>该 Linux 镜像自带 OpenCV</td><td>"没有 OpenCV、必须手写 CV"这条对 StarryOS 成立，对该镜像<strong>不成立</strong>——两者不能混为一谈</td></tr>
-        <tr><td>四语言（C / C++ / Rust / Python）运行时均已跑通</td><td>技术路线不依赖单一语言，切换成本低</td></tr>
-      </tbody>
-    </table>
-  </div>
+  <h3>SG2002 上已完成的实测（存档，不再作为选型依据）</h3>
+  <p>这些数字来自本团队归档的性能报告，记录的是 v3.0 选型时的依据。它们说明<strong>该平台的推理能力本身不弱</strong>：TPU Forward 40 ms 且与操作系统无关，端到端差距全部来自驱动层（Linux 174 ms／5.7 fps，StarryOS 481 ms／2.1 fps）。否决它的是内存与显示这两条与算力无关的硬约束，不是速度——详见第 04 节。</p>
+  <p>另有两条仍然有效的技术事实：一是 <strong>该 Linux 镜像自带 OpenCV</strong>，"没有 OpenCV、必须手写 CV"只对 StarryOS 成立，两者不能混为一谈；二是 <strong>C / C++ / Rust / Python 四种语言的 TPU 运行时均已跑通</strong>，团队在推理侧的积累是真实的，日后若换用带 NPU 的平台可直接复用。</p>
 
   <h3>StarryOS 在这套方案里是什么位置</h3>
-  <p>它不作为比赛日的运行系统，但有三重价值，不能写成"白做了"：</p>
-  <div class="tscroll">
-    <table>
-      <thead><tr><th>价值</th><th>说明</th></tr></thead>
-      <tbody>
-        <tr><td><strong>备胎</strong></td><td>若 Linux 路线的相机或驱动层出问题，StarryOS 上那条链路是通的（2.1 fps 虽慢，但每轮只识别一次，够用）</td></tr>
-        <tr><td><strong>B 项创新性素材</strong></td><td>内核 porting、UART 时钟（CLKGEN/RSTC）修复、CVI 相机驱动、TPU bring-up 都是真实完成的工作，可写入作品创意设计说明</td></tr>
-        <tr><td><strong>技术资产</strong></td><td>对 UVC、DMA、中断路径的理解直接支撑本方案的故障排查</td></tr>
-      </tbody>
-    </table>
-  </div>
+  <p>它不作为比赛日的运行系统，但有三重价值，不能写成"白做了"：<strong>备胎</strong>（Linux 路线的相机或驱动层出问题时，那条链路是通的——2.1 fps 虽慢，但每轮只识别一次，够用）；<strong>B 项素材</strong>（内核 porting、UART 时钟修复、CVI 相机驱动、TPU bring-up 都是真实完成的工作）；<strong>技术资产</strong>（对 UVC、DMA、中断路径的理解直接支撑本方案的故障排查）。</p>
   <div class="note">
     <p><b>但有一条红线：</b>作品说明里<strong>不要声称分拣装置运行在自研操作系统上</strong>——实际运行的是 Linux。可以写"团队具备自研系统适配能力，并在该系统上完成了相机与 TPU 链路的验证"，这是真话，也一样有分量。</p>
   </div>
 
   <h3>备选路线与触发条件</h3>
-  <p>选定一个方案，同时先写清楚什么情况下放弃它，可以避免在赛前陷入"再调一下就好"的拖延。</p>
+  <p>选定一个方案，同时先写清楚什么情况下放弃它，可以避免赛前陷入"再调一下就好"的拖延。</p>
   <div class="tscroll">
     <table>
       <thead><tr><th>触发条件</th><th>决策</th></tr></thead>
       <tbody>
-        <tr><td>机载屏亮度/可视角度不满足"高亮"要求，且桥接方案代价过高</td><td><strong>退回树莓派 + HDMI 屏</strong>。软件栈几乎全部可复用（Python + OpenCV + 串口协议不变），只换显示与主控</td></tr>
-        <tr><td>相机链路在整机封闭、屏幕与气泵同时工作时出现挂死</td><td>先按"开赛前重启进程"处理；若仍复发，同样退回树莓派</td></tr>
+        <tr><td>机载屏亮度/可视角度不满足"高亮"要求</td><td><strong>换一块高亮 HDMI 屏</strong>。只替换显示屏，主控、机械、气路、STM32、串口协议、识别算法全部不动</td></tr>
+        <tr><td>树莓派到货延误或供应异常</td><td>改用同价位 x86 小主机或 Jetson Nano。三者同为标准 Linux + HDMI + V4L2，除驱动细节外软件栈不动</td></tr>
+        <tr><td>相机链路在整机封闭、屏幕与气泵同时工作时出现挂死</td><td>先按"开赛前重启进程"处理；若仍复发，改用带独立供电的 USB HUB 或工业 USB 相机</td></tr>
         <tr><td>两条识别通道都无法把 6 类分开</td><td>问题在物料设计，不在平台——回到第 05 节重新选形状/颜色，<strong>不要换平台</strong></td></tr>
       </tbody>
     </table>
   </div>
-  <p>之所以敢把"退回树莓派"当作一条真实可行的退路，是因为它只需要替换主控与显示两个环节，机械、气路、STM32、串口协议、识别算法全部不动。</p>
 
   <h3>开题前必须做完的验证实验</h3>
   <p>以下三项是当前<strong>唯一没有实测背书</strong>的环节，全部可以在一个周末内完成。做完再冻结方案，不要边做边猜。</p>
   <ul class="asks">
-    <li><span class="box"></span><div><b>① 用户态写 framebuffer</b>用 Python 直接写 <code>/dev/fb0</code>，画出"序号 / 名称 / 图片 / 总数"四字段的表格。注意：<code>fbpattern</code> 和开机 logo 能显示，只证明<strong>内核级</strong>绘图正常，不证明用户态可行。<strong>这项优先级最高</strong>——显示是每条 2 分、每件 8 分。</div></li>
-    <li><span class="box"></span><div><b>② 屏幕亮度实测</b>把屏拿到实际比赛场地量一次亮度和可视角度，拍照留证。若场地是强光环境，这一项可能直接决定平台选型。</div></li>
+    <li><span class="box"></span><div><b>① 显示屏亮度实测</b>把候选 HDMI 屏拿到实际比赛场地量一次亮度和可视角度，拍照留证。<strong>这项优先级最高</strong>——显示是每条 2 分、每件 8 分，且强光场地可能直接决定选哪一块屏。</div></li>
+    <li><span class="box"></span><div><b>② 树莓派上的显示链路</b>用 Python 把"序号 / 名称 / 图片 / 总数"四字段表格画到 HDMI 屏，量一次刷新耗时并确认双缓冲方案。换到标准 Linux 后这一步风险很低，但仍必须在真屏上跑通、并确认"每件分拣后刷新"的节拍可接受。</div></li>
     <li><span class="box"></span><div><b>③ 镜头焦距复核</b>查到相机传感器尺寸后重算视场。若传感器为 1/3"，6mm 镜头在 WD 250mm 处即可覆盖 200mm 视场，畸变远小于 3.6mm 广角——能显著减轻标定负担，且少一次内参标定。</div></li>
   </ul>
-  <p>三项全部通过 → 冻结 SG2002 路线，进入 W2 物料与 CV 开发。任一项不通过 → 按上面的触发条件处理，<strong>不要边改方案边做实验</strong>。</p>
+  <p>三项全部通过 → 冻结方案，进入 W2 物料与 CV 开发。任一项不通过 → 按上面的触发条件处理，<strong>不要边改方案边做实验</strong>。</p>
 
-  <h3>一处不对等的风险，以及本方案的处置</h3>
+  <h3>一处不对等的风险</h3>
   <p>选型不能只比"能不能做出来"，还要比"出事之后能不能救"。比赛开始后不得触碰装置，一次不可恢复的故障就是整轮报废。</p>
-  <p>树莓派路线的故障大多可替换——换系统卡、换主板即可重来；SG2002 路线的故障更容易落在驱动层，换板子未必有用。本方案的处置方式是<strong>用结构设计把风险前移</strong>：识别全部放在待机阶段完成，开赛前有充足时间重启进程；备一张系统卡；并保留树莓派作为可切换的退路（软件栈几乎全部可复用）。</p>
-  <p>换句话说，这条路线的安全性不来自"它不会坏"，而来自<em>"它坏的时候不在计时中"</em>。</p>
+  <p>这也是 SG2002 路线被放弃的第二个理由：它的故障更容易落在驱动层（私有相机栈、缺失的显示驱动），而驱动层的问题<strong>换板子未必有用</strong>——同一套镜像还是同样的毛病。树莓派的故障大多停留在可替换层面：换系统卡、换主板、换屏，都能在赛前完成。</p>
+  <p>处置方式是<strong>用结构设计把风险前移</strong>：识别全部放在待机阶段完成，开赛前有充足时间重启进程；备一张系统卡；并保留树莓派作为可切换的退路。换句话说，这条路线的安全性不来自"它不会坏"，而来自<em>"它坏的时候不在计时中"</em>。</p>
 </section>
 
 <footer>
-  智能分拣装置技术方案 · v3.0 · 2026-10-20 · 蒋玉月<br>
+  智能分拣装置技术方案 · v3.1 · 2026-10-27 · 蒋玉月<br>
+  v3.1 变更：主控由 SG2002 改为树莓派，依据为 2026-10-27 的 SG2002 实机验证（第 04 节）；预算随主控与显示屏改为采购而重算。<br>
   规则核对依据：《2027 年智能+工程创新赛道命题与运行发布稿》及《竞赛命题解析》。官方发布稿链接：<a href="https://www.shiep.edu.cn/_upload/article/files/61/d5/340105744e3c9ee39242687d8129/0958691b-a187-48e7-a642-8440ce5b65c8.pdf">查看发布稿 PDF</a>；赛前以组委会/本校最新通知为准。
 </footer>
 

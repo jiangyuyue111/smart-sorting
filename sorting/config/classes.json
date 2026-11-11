@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "note": "6 类 = 3 种形状 × 2 种颜色。赛规判据是「形状相同且颜色相同」，所以类别就是这两件事的组合。换物料只改这个文件。",
+
+  "colors": [
+    { "name": "红", "hue": [0, 10], "hue_wrap": [170, 180], "min_s": 90, "min_v": 60 },
+    { "name": "蓝", "hue": [100, 130], "hue_wrap": null, "min_s": 90, "min_v": 60 }
+  ],
+
+  "shapes": {
+    "circle": {
+      "label": "圆形",
+      "circularity": 1.0,
+      "vertices": [6, 64],
+      "fill": [0.70, 0.85]
+    },
+    "square": {
+      "label": "方形",
+      "circularity": 0.785,
+      "vertices": [4, 4],
+      "fill": [0.90, 1.00]
+    },
+    "triangle": {
+      "label": "三角",
+      "circularity": 0.605,
+      "vertices": [3, 3],
+      "fill": [0.40, 0.60]
+    }
+  },
+
+  "classes": [
+    { "id": "1", "name": "红色圆形", "shape": "circle",   "color": "红" },
+    { "id": "2", "name": "红色方形", "shape": "square",   "color": "红" },
+    { "id": "3", "name": "红色三角", "shape": "triangle", "color": "红" },
+    { "id": "4", "name": "蓝色圆形", "shape": "circle",   "color": "蓝" },
+    { "id": "5", "name": "蓝色方形", "shape": "square",   "color": "蓝" },
+    { "id": "6", "name": "蓝色三角", "shape": "triangle", "color": "蓝" }
+  ],
+
+  "thresholds": {
+    "min_area_mm2": 120.0,
+    "max_area_mm2": 4000.0,
+    "min_confidence": 0.55,
+    "min_margin": 0.08
+  }
+}
