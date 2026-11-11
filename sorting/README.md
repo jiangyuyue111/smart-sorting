@@ -8,8 +8,12 @@
 ```bash
 python -m sorting.app.demo                 # 出一套汇报材料到 out/demo/
 python -m sorting.app.main --demo          # 跑一轮完整流程，终端打印每件结果
-python -m unittest discover -s sorting/tests -t .    # 91 个测试，无板无相机
+python -m unittest discover -s sorting/tests -t .    # 99 个测试，无板无相机
 ```
+
+> 第一次接触这个项目、不知道从哪下手，直接看
+> [`docs/运行说明.md`](../docs/运行说明.md)：从环境检查到"每张图是什么"一步步写，
+> 不需要懂代码。
 
 ## 目录
 

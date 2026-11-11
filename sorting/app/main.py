@@ -134,7 +134,12 @@ class Watchdog:
 # --------------------------------------------------------------------------
 
 class Screen:
-    """把 DisplayModel 渲染出去。--frames 给了就存 PNG，否则打印一行。"""
+    """把 DisplayModel 渲染出去。--frames 给了就存 PNG，否则打印一行。
+
+    存帧模式是**同步**写的：每次 update 立刻落一张 PNG。原因是演示时
+    `--speed 0` 不等待，整轮模拟 0.1 秒就跑完了，靠后台线程每 0.2 秒刷一次
+    只能抓到 1 帧——那就失去"逐件刷新"的演示意义了。
+    """
 
     def __init__(self, out_dir: Path | None = None) -> None:
         self.out_dir = out_dir
@@ -142,22 +147,30 @@ class Screen:
         self._lock = threading.Lock()
         self._stop = threading.Event()
         self._thread = threading.Thread(target=self._loop, name="display", daemon=True)
+        self._running = False
         self._seq = 0
         if out_dir:
             out_dir.mkdir(parents=True, exist_ok=True)
 
     def start(self) -> None:
+        if self.out_dir:
+            return          # 存帧模式同步写，不需要后台线程
         self._thread.start()
+        self._running = True
 
     def stop(self) -> None:
-        self._stop.set()
-        self._thread.join(timeout=1.0)
-        self._flush()
+        if self._running:
+            self._stop.set()
+            self._thread.join(timeout=1.0)
+            self._running = False
+            self._flush()
 
     def update(self, **kw) -> None:
         with self._lock:
             for k, v in kw.items():
                 setattr(self.model, k, v)
+        if self.out_dir:
+            self._flush()   # 每个状态各落一张，帧数 = 状态变化次数
 
     def _loop(self) -> None:
         while not self._stop.wait(0.2):
@@ -240,7 +253,8 @@ def run(cfg: Config, book, link: Link, args) -> int:
         with busy:
             session.command(proto.Home())
         res = runner.execute(plan, link, cfg, speed_factor=args.speed,
-                             on_before_item=on_before, on_display=on_display)
+                             on_before_item=on_before, on_display=on_display,
+                             inject_skip=set(args.inject_skip or ()))
 
         machine.fire(Event.PLAN_DONE)
         screen.update(status="DONE", done=state["done"])
@@ -293,6 +307,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--per-class", type=int, default=2, dest="per_class")
     ap.add_argument("--speed", type=float, default=0.0, help="播放倍速，0 = 不等待")
     ap.add_argument("--frames", help="把屏幕帧存到这个目录")
+    ap.add_argument("--inject-skip", type=int, nargs="*", default=None,
+                    dest="inject_skip",
+                    help="演示用：让这些序号的件空夹，展示 SKIP 分支（不进料盒、屏幕标 NG）")
     args = ap.parse_args(argv)
 
     cfg = load_config(args.config)
