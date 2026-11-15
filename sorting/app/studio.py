@@ -739,6 +739,7 @@ def _plan_from_state(state: dict, cfg: cfgmod.Config, book) -> jobqueue.Plan:
 
 class Handler(BaseHTTPRequestHandler):
     studio: Studio = None            # 启动时注入
+    base: str = ""                   # 挂在子路径下时（如 /sort）先把这个前缀剥掉
     server_version = "SortingStudio/1.0"
 
     def log_message(self, fmt, *args):       # 别把控制台刷满
@@ -768,6 +769,18 @@ class Handler(BaseHTTPRequestHandler):
         u = urlparse(self.path)
         q = {k: v[-1] for k, v in parse_qs(u.query).items()}
         path = u.path
+
+        # 挂在子路径下（隧道/反代转发 /sort/* 时用）。页面里的链接一律写成
+        # 相对路径，所以剥掉前缀就能照常工作——不需要知道自己在哪个前缀下。
+        if self.base:
+            if path == self.base:
+                self.send_response(301)
+                self.send_header("Location", self.base + "/")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
+            if path.startswith(self.base + "/"):
+                path = path[len(self.base):]
 
         try:
             if path in ("/", "/index.html"):
@@ -891,6 +904,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="接实物：STM32 串口，如 COM3。不给就是仿真")
     ap.add_argument("--baud", type=int, default=115200)
     ap.add_argument("--no-browser", action="store_true")
+    ap.add_argument("--base", default="",
+                    help="挂在子路径下，如 --base /sort（隧道或反代转发到子路径时用）")
     ap.add_argument("--selftest", action="store_true", help="自检后退出")
     args = ap.parse_args(argv)
 
@@ -906,10 +921,11 @@ def main(argv: list[str] | None = None) -> int:
                     serial_port=args.serial, baud=args.baud)
 
     Handler.studio = studio
+    Handler.base = args.base.rstrip("/")
     httpd = ThreadingHTTPServer((args.host, args.http_port), Handler)
     httpd.daemon_threads = True
 
-    url = f"http://{args.host}:{args.http_port}/"
+    url = f"http://{args.host}:{args.http_port}{Handler.base}/"
     print("=" * 62)
     print("  智能分拣装置 · 工作台")
     print("=" * 62)

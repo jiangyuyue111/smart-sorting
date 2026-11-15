@@ -39,7 +39,14 @@ python -m unittest discover -s sorting/tests -t .    # 146 个测试，无板无
 ```bash
 python -m sorting.app.studio --selftest             # 不开浏览器，只校验时间轴
 python -m sorting.app.studio --serial COM3          # 接真机，边跑边看
+python -m sorting.app.studio --base /sort --http-port 3030 --no-browser
+                                                    # 挂在子路径下（隧道路由 /sort/* 时用）
 ```
+
+> 公网演示：**https://jiangbot.com/sort/**（识别实况 `/sort/recognition`）。
+> 服务器上用的就是上面那条 `--base /sort`。改完代码用
+> `bash scripts/deploy-demo.sh` 同步过去——打包、重启、自检、试公网，一条命令。
+> 页面里的接口一律写相对路径（有测试盯着），所以剥掉前缀换到哪都能跑。
 
 ## 识别实况（`/recognition`）
 

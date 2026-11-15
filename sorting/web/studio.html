@@ -137,7 +137,7 @@ table.q tr.done td{color:#6d7683}
     <span class="badge" id="badge-cal">未标定</span>
     <span class="spacer"></span>
     <span class="sub" id="source"></span>
-    <a class="btn" href="/recognition"
+    <a class="btn" href="recognition"
        style="text-decoration:none;display:inline-block">识别实况 →</a>
     <button class="btn" id="btn-live">实跑一轮</button>
     <button class="btn primary" id="btn-play">▶ 播放</button>
@@ -271,7 +271,7 @@ const S = {
 
 // ---------------------------------------------------------------- 数据
 async function loadScene() {
-  const r = await fetch("/api/scene");
+  const r = await fetch("api/scene");
   applyScene(await r.json());
 }
 
@@ -552,7 +552,7 @@ function updateHud() {
   const key = ss.pos + "|" + ss.phase;
   if (key !== S.screenKey) {
     S.screenKey = key;
-    $("screen").src = `/api/screen.png?pos=${ss.pos}&phase=${ss.phase}`;
+    $("screen").src = `api/screen.png?pos=${ss.pos}&phase=${ss.phase}`;
   }
 
   // -- 原理 ------------------------------------------------------------
@@ -721,7 +721,7 @@ $("btn-regen").onclick = async () => {
     inject: $("f-inject").value || "",
   };
   try {
-    const r = await fetch("/api/reload?" + new URLSearchParams(params));
+    const r = await fetch("api/reload?" + new URLSearchParams(params));
     const j = await r.json();
     if (!r.ok) throw new Error(j.error || "生成失败");
     applyScene(j);
@@ -738,7 +738,7 @@ $("btn-live").onclick = async () => {
   const inject = $("f-inject").value || "";
   // 真机上等待是由 MCU 做的，倍速只能影响仿真；接串口时固定按 1× 跑
   const speed = (S.scene && S.scene.mode === "serial") ? 1 : S.rate;
-  const r = await fetch("/api/live/start?" + new URLSearchParams({ inject, speed: String(speed) }));
+  const r = await fetch("api/live/start?" + new URLSearchParams({ inject, speed: String(speed) }));
   const j = await r.json();
   if (!j.ok) { $("err").textContent = j.error || "启动失败"; return; }
   startLive();
@@ -753,7 +753,7 @@ function startLive() {
   $("badge-mode").textContent = "实跑中";
   $("badge-mode").className = "badge on";
   $("btn-play").disabled = true;
-  S.es = new EventSource("/api/live/events");
+  S.es = new EventSource("api/live/events");
   S.es.onmessage = (e) => {
     const ev = JSON.parse(e.data);
     if (ev.motions) for (const m of ev.motions) {

@@ -126,6 +126,10 @@ python -m sorting.app.main --port COM3 --demo        # 接真机（需要 STM32 
 打开工作台后，点右上角 **「识别实况 →」**（或直接开 `127.0.0.1:8765/recognition`）
 能看到识别的七张中间图和对应的**真实源码**——那是用来回答"你怎么知道识别是对的"的。
 
+> **不想装环境也能看**：公网有一份常驻演示 —— <https://jiangbot.com/sort/>
+> （识别实况：<https://jiangbot.com/sort/recognition>）。同一份代码，
+> 改完用 `bash scripts/deploy-demo.sh` 同步。
+
 | 模块 | 职责 |
 |---|---|
 | `sorting/app/studio.py` | **工作台**：本地 HTTP 服务 + 本地网页。预演和实机共用一条时间轴 |

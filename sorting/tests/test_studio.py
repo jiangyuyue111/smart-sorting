@@ -248,5 +248,92 @@ class TestPlanRoundTrip(unittest.TestCase):
             self.assertAlmostEqual(got.pick_xy[0], want["pick"][0])
 
 
+class TestBasePrefix(unittest.TestCase):
+    """挂到子路径下（隧道转发 `jiangbot.com/sort/*`）时，前缀必须剥干净。
+
+    页面里所有接口都写成**相对路径**，所以剥掉前缀以后，同一份 HTML 在
+    `/` 和 `/sort/` 下都能工作。这条不变式用下面的
+    `test_pages_use_relative_urls` 钉住——一旦有人写回 `/api/...`，
+    在子路径下就会 404，而且很难查。
+    """
+
+    BASE = "/sort"
+
+    @classmethod
+    def setUpClass(cls):
+        import threading
+        from http.server import ThreadingHTTPServer
+        cls._saved = (studio.Handler.studio, studio.Handler.base)
+        studio.Handler.studio = studio.Studio(TOML, CLASSES)
+        studio.Handler.base = cls.BASE
+        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), studio.Handler)
+        cls.httpd.daemon_threads = True
+        cls.port = cls.httpd.server_address[1]
+        cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.httpd.shutdown()
+        cls.httpd.server_close()
+        studio.Handler.studio, studio.Handler.base = cls._saved
+
+    def _get(self, path: str):
+        import http.client
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=20)
+        conn.request("GET", path)
+        r = conn.getresponse()
+        body = r.read()
+        loc = r.getheader("Location")
+        conn.close()
+        return r.status, loc, body
+
+    def test_root_with_slash_serves_the_page(self):
+        code, _loc, body = self._get(self.BASE + "/")
+        self.assertEqual(code, 200)
+        self.assertIn("<meta charset=\"utf-8\">".encode(), body)
+
+    def test_bare_base_redirects_to_slash(self):
+        code, loc, _body = self._get(self.BASE)
+        self.assertEqual(code, 301)
+        self.assertEqual(loc, self.BASE + "/")
+
+    def test_api_works_under_the_prefix(self):
+        import json
+        code, _loc, body = self._get(self.BASE + "/api/scene")
+        self.assertEqual(code, 200)
+        self.assertEqual(len(json.loads(body)["items"]), 12)
+
+    def test_recognition_pages_work_under_the_prefix(self):
+        code, _loc, body = self._get(self.BASE + "/recognition")
+        self.assertEqual(code, 200)
+        self.assertIn(b"<meta charset=\"utf-8\">", body)
+        code, _loc, png = self._get(self.BASE + "/api/stage.png?k=06")
+        self.assertEqual(code, 200)
+        self.assertTrue(png.startswith(b"\x89PNG"))
+
+    def test_prefix_is_an_alias_not_a_wall(self):
+        """带前缀和不带前缀都能用：前缀只是剥掉，不是白名单。
+
+        真机上隧道只把 `/sort/*` 转发过来，不带前缀的请求根本到不了这里；
+        允许别名是为了本地调试时不用记着加前缀。
+        """
+        code, _loc, body = self._get("/api/scene")
+        self.assertEqual(code, 200)
+        self.assertIn(b'"items"', body)
+        code, _loc, _body = self._get("/sortxyz")
+        self.assertEqual(code, 404, "/sortxyz 不该被当成 /sort 的前缀")
+
+
+class TestPagesUseRelativeUrls(unittest.TestCase):
+    """两个页面的接口地址必须是相对的，否则挂到子路径下就全断。"""
+
+    def test_pages_use_relative_urls(self):
+        for name in ("studio.html", "recognition.html"):
+            text = (studio.WEB_DIR / name).read_text(encoding="utf-8")
+            for bad in ('"/api/', "`/api/", '"/recognition"'):
+                self.assertNotIn(bad, text, f"{name} 里有绝对路径 {bad}")
+
+
 if __name__ == "__main__":
     unittest.main()

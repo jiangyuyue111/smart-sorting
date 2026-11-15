@@ -257,7 +257,7 @@ function reasonText(r) {
 
 async function load() {
   const qs = new URLSearchParams(thr).toString();
-  const res = await fetch("/api/recognition" + (qs ? "?" + qs : ""));
+  const res = await fetch("api/recognition" + (qs ? "?" + qs : ""));
   R = await res.json();
   ver += 1;
   if (!R.rows.some((r) => r.idx === cur)) cur = R.rows.length ? R.rows[0].idx : 0;
@@ -313,7 +313,7 @@ async function showStage(k) {
   $("st-k").textContent = st.k;
   $("st-title").textContent = st.title;
   $("st-note").textContent = st.note;
-  $("st-img").src = `/api/stage.png?k=${k}&v=${ver}`;
+  $("st-img").src = `api/stage.png?k=${k}&v=${ver}`;
   renderStageStrip();
   renderCode(st);
 }
