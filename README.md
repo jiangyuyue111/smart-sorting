@@ -118,14 +118,18 @@ S1 骨架，**不需要板子**就能跑：
 ```powershell
 cd D:\智能分拣
 python -m sorting.app.studio                        # 工作台：浏览器里看机器一件一件动
-python -m unittest discover -s sorting\tests -t .   # 124 个单元测试
+python -m unittest discover -s sorting\tests -t .   # 146 个单元测试
 python -m sorting.app.main --demo                    # 模拟 MCU 跑一遍完整工序
 python -m sorting.app.main --port COM3 --demo        # 接真机（需要 STM32 先烧好固件）
 ```
 
+打开工作台后，点右上角 **「识别实况 →」**（或直接开 `127.0.0.1:8765/recognition`）
+能看到识别的七张中间图和对应的**真实源码**——那是用来回答"你怎么知道识别是对的"的。
+
 | 模块 | 职责 |
 |---|---|
 | `sorting/app/studio.py` | **工作台**：本地 HTTP 服务 + 本地网页。预演和实机共用一条时间轴 |
+| `sorting/app/recog.py` | **识别实况页**：七张中间图由 `detect` 真函数现算，源码用 `inspect` 从活函数读 |
 | `sorting/core/protocol.py` | UART 行协议编解码。**契约在这里，改协议先改它和它的测试** |
 | `sorting/core/link.py` | `SerialLink`（真串口）/ `MockLink`（模拟 MCU，带物理量耗时）/ `Session`（指令→OK→DONE） |
 | `sorting/core/machine.py` | 顶层状态机 BOOT→SELF_TEST→STANDBY→ARMED→RUNNING→FINISH，FAULT 可从任意态进入 |

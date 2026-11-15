@@ -66,6 +66,9 @@ class Verdict:
     reason: str
 
 
+VERTEX_PENALTY = 0.05   # 顶点数不在区间时的轻惩罚，不直接否决（抗噪）
+
+
 class ClassBook:
     def __init__(self, colors, shapes, classes, thresholds) -> None:
         self.colors: list[ColorDef] = colors
@@ -86,21 +89,31 @@ class ClassBook:
         return [c.name for c in self.classes]
 
     # -- 判定 -------------------------------------------------------------
+    def shape_scores(self, circularity: float, vertices: int) -> list[tuple[float, str, bool]]:
+        """返回 [(距离, 形状键, 顶点数是否落在区间), ...]，按距离升序。
+
+        单独拆出来是为了让界面能展示"为什么判成这个形状"——
+        `judge_shape` 用的是同一个函数，两处不会各算一套。
+        """
+        scored = []
+        for key, sd in self.shapes.items():
+            d = abs(circularity - sd.circularity)
+            lo, hi = sd.vertices
+            in_range = lo <= vertices <= hi
+            if not in_range:
+                d += VERTEX_PENALTY
+            scored.append((d, key, in_range))
+        scored.sort()
+        return scored
+
     def judge_shape(self, circularity: float, vertices: int, fill: float) -> tuple[str | None, float, float]:
         """返回 (形状键, 置信度, 与次优的距离余量)。
 
         打分只用圆度：三个形状的理论圆度分别是 1.000 / 0.785 / 0.605，
         间隔足够大，比多特征加权更稳也更好解释。
         """
-        scored = []
-        for key, sd in self.shapes.items():
-            d = abs(circularity - sd.circularity)
-            lo, hi = sd.vertices
-            if not (lo <= vertices <= hi):
-                d += 0.05          # 顶点数不符的轻惩罚，不直接否决（抗噪）
-            scored.append((d, key))
-        scored.sort()
-        best_d, best = scored[0]
+        scored = self.shape_scores(circularity, vertices)
+        best_d, best, _ = scored[0]
         second_d = scored[1][0] if len(scored) > 1 else 1.0
         conf = max(0.0, 1.0 - best_d / 0.20)
         return best, conf, second_d - best_d

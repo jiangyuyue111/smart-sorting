@@ -29,8 +29,11 @@
 产物
 ----
     GET  /                 工作台页面（单文件）
+    GET  /recognition      识别实况页面：七张中间图 + 逐件判定链 + 真实源码
     GET  /api/scene        当前场景 + 完整时间轴（JSON）
     GET  /api/reload       改参数重算（seed / per_class / 各轴速度 / z_safe / inject）
+    GET  /api/recognition  逐件判定链（可带 min_confidence / min_margin / min_area_mm2）
+    GET  /api/stage.png    某一环的中间图（?k=01..07）
     GET  /api/screen.png   由 renderer.py 真实渲染的 480×320 屏幕帧
     GET  /api/tray.png     合成相机原图
     GET  /api/thumb.png    单件缩略图
@@ -40,6 +43,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import queue
 import sys
@@ -63,6 +67,7 @@ from ..vision import classes as vclasses
 from ..vision import detect as vdetect
 from ..vision import geometry
 from ..vision import synthetic
+from . import recog
 from . import runner
 from .demo import crop_thumb, evaluate
 
@@ -72,6 +77,7 @@ WEB_DIR = ROOT / "sorting" / "web"
 DEFAULT_CONFIG = CONFIG_DIR / "machine.toml"
 DEFAULT_CLASSES = CONFIG_DIR / "classes.json"
 PAGE = WEB_DIR / "studio.html"
+RECOG_PAGE = WEB_DIR / "recognition.html"
 
 # 页面配色用。只影响画法，不参与任何计算。
 COLOR_HEX = {"红": "#e2594c", "蓝": "#4a86e0"}
@@ -331,6 +337,20 @@ def apply_overrides(cfg: cfgmod.Config, q: dict) -> cfgmod.Config:
     return out
 
 
+THRESHOLD_KEYS = ("min_confidence", "min_margin", "min_area_mm2")
+
+
+def _book_with(base, q: dict):
+    """复制一份类别簿，只换判据阈值。原件不许被界面改动。"""
+    book = copy.copy(base)
+    book.thresholds = dict(base.thresholds)
+    for key in THRESHOLD_KEYS:
+        v = _num(q, key, None)
+        if v is not None:
+            book.thresholds[key] = float(v)
+    return book
+
+
 class Studio:
     """一份场景 + 一份时间轴。单用户本地服务，没必要上并发保护之外的复杂度。"""
 
@@ -349,6 +369,10 @@ class Studio:
         self._thumbs: dict[int, Image.Image] = {}
         self._tray: Image.Image | None = None
         self._screen_cache: dict[tuple, bytes] = {}
+        self._cfg: cfgmod.Config | None = None
+        self._scene = None
+        self._stage_cache: dict[str, bytes] = {}
+        self._recog_ctx = None          # (scene, dets, book) 最近一次识别所用的上下文
         self.reload({})
 
     # -- 重建 ------------------------------------------------------------
@@ -370,9 +394,12 @@ class Studio:
         state = self._payload(cfg, scene, dets, plan, link, res, inject, seed, per)
         with self.lock:
             self.state = state
+            self._cfg = cfg
+            self._scene = scene
             self._thumbs = {d.idx: crop_thumb(scene.image, d) for d in dets}
             self._tray = Image.fromarray(scene.image[:, :, ::-1])
             self._screen_cache = {}
+            self._stage_cache = {}
         return state
 
     def _payload(self, cfg, scene, dets, plan, link, res, inject, seed, per) -> dict:
@@ -541,6 +568,49 @@ class Studio:
         img.save(buf, format="PNG")
         return buf.getvalue()
 
+    # -- 识别实况 --------------------------------------------------------
+    def recognition(self, q: dict | None = None) -> dict:
+        """重跑一遍识别并给出逐件判定链。
+
+        允许临时改判据阈值（min_confidence / min_margin / min_area_mm2），
+        用来现场演示"阈值一动，结论就变"——这也是答辩时"现场可调"那句话的
+        证据，而不是一句口号。
+        """
+        q = q or {}
+        with self.lock:
+            scene = self._scene
+            cfg = self._cfg
+            base_book = self.book
+        if scene is None or cfg is None:
+            return {"rows": [], "stages": [], "code": {}, "summary": {}}
+
+        book = _book_with(base_book, q)
+        dets = vdetect.find_items(scene.image, scene.H_px_to_mm, book)
+        payload = recog.build_payload(cfg, scene, dets, book)
+        with self.lock:
+            self._recog_ctx = (scene, dets, book)
+            self._stage_cache = {}          # 判定变了，第 07 张图也得重画
+        return payload
+
+    def stage_png(self, key: str, q: dict | None = None) -> bytes:
+        with self.lock:
+            cached = self._stage_cache.get(key)
+            ctx = self._recog_ctx
+            scene = self._scene
+        if cached is not None:
+            return cached
+        if ctx is None:                     # 还没人调过 /api/recognition，先算一遍
+            self.recognition(q)
+            with self.lock:
+                ctx = self._recog_ctx
+        if ctx is None or scene is None:
+            return b""
+        _scene, dets, _book = ctx
+        png = recog.stage_png(_scene, dets, key)
+        with self.lock:
+            self._stage_cache[key] = png
+        return png
+
     # -- 实跑 ------------------------------------------------------------
     def start_live(self, q: dict) -> dict:
         if self.live is not None and self.live.alive:
@@ -702,8 +772,14 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path in ("/", "/index.html"):
                 self._send(PAGE.read_bytes(), "text/html; charset=utf-8")
+            elif path in ("/recognition", "/recognition.html"):
+                self._send(RECOG_PAGE.read_bytes(), "text/html; charset=utf-8")
             elif path == "/api/scene":
                 self._json(self.studio.state)
+            elif path == "/api/recognition":
+                self._json(self.studio.recognition(q))
+            elif path == "/api/stage.png":
+                self._send(self.studio.stage_png(q.get("k", "01"), q), "image/png")
             elif path == "/api/reload":
                 self._json(self.studio.reload(q))
             elif path == "/api/tray.png":

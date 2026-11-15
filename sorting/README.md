@@ -9,7 +9,7 @@
 python -m sorting.app.studio               # 打开工作台网页（推荐先用这个）
 python -m sorting.app.demo                 # 出一套汇报材料到 out/demo/
 python -m sorting.app.main --demo          # 跑一轮完整流程，终端打印每件结果
-python -m unittest discover -s sorting/tests -t .    # 124 个测试，无板无相机
+python -m unittest discover -s sorting/tests -t .    # 146 个测试，无板无相机
 ```
 
 > 第一次接触这个项目、不知道从哪下手，直接看
@@ -41,6 +41,31 @@ python -m sorting.app.studio --selftest             # 不开浏览器，只校�
 python -m sorting.app.studio --serial COM3          # 接真机，边跑边看
 ```
 
+## 识别实况（`/recognition`）
+
+工作台右上角的 **「识别实况 →」**，回答的是一个更硬的问题：**你怎么知道识别是对的。**
+
+```
+原图 → V 通道 → Otsu → 形态学 → 外轮廓 → 抽稀 → 判定
+```
+
+| 东西 | 从哪来 |
+|---|---|
+| 七张中间图 | `detect.segment()`（开/闭半径传 0 = 未做形态学的原始阈值图）、`cv2.findContours`、`approxPolyDP`、`detect.draw()` **现算** |
+| 每张图下面的源码 | `inspect.getsourcelines()` 从**活着的函数对象**取，带真实文件和行号 |
+| 逐件判定链 | 圆度（抽稀前/后）、形状打分表、色相峰值、坐标链，全部来自同一次 `find_items` |
+| 判据滑块 | 复制一份类别簿改阈值重跑，原件不动 |
+
+两条不许破的规矩（`app/recog.py` 开头写死了，`tests/test_recog.py` 盯着）：
+
+1. **中间图不是照着结果补画的**——同一批函数、同一批常量（`EPS_FRAC` 等）。
+2. **源码不是抄进 HTML 的**——`test_source_matches_inspect_verbatim` 拿
+   `inspect.getsource()` 逐行对拍，有人抄一份进页面就会红。漂移过的"代码展示"比没有更糟。
+
+这一页最值钱的一张论证：正方形未抽稀时圆度算成 **0.71**，抽稀后 **0.785**，
+正好是理论值。所以"先修测量再谈阈值"是有据可查的，不是调参调出来的。
+`test_every_item_moves_closer_to_its_theory` 对 12 件逐件断言这一点。
+
 ## 目录
 
 ```
@@ -66,9 +91,11 @@ sorting/
 │   ├─ runner.py         把 Action 变成指令，记录时序
 │   ├─ main.py           上机入口：看门狗 + 状态机 + 屏幕线程
 │   ├─ demo.py           一键出报告材料
+│   ├─ recog.py          识别实况页：七张中间图 + 逐件判定链 + 现读源码
 │   └─ studio.py         工作台：本地 HTTP 服务，预演 + 实跑共用一套数据
 ├─ web/
-│   └─ studio.html       工作台页面（单文件，无外链，不联网也能开）
+│   ├─ studio.html       工作台页面（单文件，无外链，不联网也能开）
+│   └─ recognition.html  识别实况页（同上，站内跳转，不加载任何外部资源）
 └─ tests/                全部可无板运行
 ```
 
