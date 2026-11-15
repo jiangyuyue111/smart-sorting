@@ -6,14 +6,40 @@
 ## 三行上手
 
 ```bash
+python -m sorting.app.studio               # 打开工作台网页（推荐先用这个）
 python -m sorting.app.demo                 # 出一套汇报材料到 out/demo/
 python -m sorting.app.main --demo          # 跑一轮完整流程，终端打印每件结果
-python -m unittest discover -s sorting/tests -t .    # 99 个测试，无板无相机
+python -m unittest discover -s sorting/tests -t .    # 124 个测试，无板无相机
 ```
 
 > 第一次接触这个项目、不知道从哪下手，直接看
 > [`docs/运行说明.md`](../docs/运行说明.md)：从环境检查到"每张图是什么"一步步写，
 > 不需要懂代码。
+
+## 工作台（studio）
+
+`python -m sorting.app.studio` 起一个本地服务（默认 8765），浏览器打开就是工作台。
+它把整条链路摊开给人看，不是另写一个演示程序：
+
+| 面板 | 显示什么 | 从哪来 |
+|---|---|---|
+| 托盘动画 | X/Y/Z/夹爪实时位置、在搬哪件、料盒计数 | `RecordingLink` 录下的运动时间轴 |
+| 原理 · 内部实况 | 当前串口指令、像素→托盘 mm→整机 mm、动作序列、齿轮换算、三种排程成本 | 运行时的真实中间量，不是另算一套 |
+| 屏幕 | 480×320 当前帧 | 直接调 `display/renderer.render()` |
+| 参数 | 速度、`z_safe`、种子、抽检跳过 | 改完立刻重算整轮并重绘 |
+
+**关键设计**：`RecordingLink` 包在**任意** `Link` 外面录动作，所以
+
+- 预演（`MockLink`）录出来的是一条完整时间轴，可以拖动回放；
+- 实跑（`SerialLink`，`--serial COM3`）边走边追加，通过 SSE 推给同一个页面。
+
+两条路走的是同一份渲染代码、同一个数据结构，**不存在"演示一套、真机一套"**。
+`--selftest` 会断言时间轴末尾与 `runner` 报告的总时长相差 < 1 ms。
+
+```bash
+python -m sorting.app.studio --selftest             # 不开浏览器，只校验时间轴
+python -m sorting.app.studio --serial COM3          # 接真机，边跑边看
+```
 
 ## 目录
 
@@ -39,7 +65,10 @@ sorting/
 ├─ app/
 │   ├─ runner.py         把 Action 变成指令，记录时序
 │   ├─ main.py           上机入口：看门狗 + 状态机 + 屏幕线程
-│   └─ demo.py           一键出报告材料
+│   ├─ demo.py           一键出报告材料
+│   └─ studio.py         工作台：本地 HTTP 服务，预演 + 实跑共用一套数据
+├─ web/
+│   └─ studio.html       工作台页面（单文件，无外链，不联网也能开）
 └─ tests/                全部可无板运行
 ```
 

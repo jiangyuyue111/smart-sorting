@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>智能分拣装置 · 工作台</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --bg:#0f1116; --panel:#161a21; --card:#1e2229; --card2:#242932;
+  --line:#333a45; --text:#ecf0f5; --dim:#8c94a0; --accent:#56c878;
+  --warn:#f0aa46; --blue:#4a86e0; --red:#e2594c;
+  --mono:Consolas,"Cascadia Mono","SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font:14px/1.5 -apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+  overflow:hidden;
+}
+.app{
+  height:100vh; padding:12px; display:grid; gap:12px;
+  grid-template-columns:minmax(0,1fr) 404px;
+  grid-template-rows:auto minmax(0,1fr);
+  grid-template-areas:"head head" "main side";
+}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:10px;}
+h2{margin:0 0 8px; font-size:13px; font-weight:600; color:var(--dim);
+   letter-spacing:.06em; text-transform:uppercase}
+.mono{font-family:var(--mono)}
+
+/* ---------- 顶栏 ---------- */
+header{grid-area:head; display:flex; align-items:center; gap:14px; padding:10px 14px}
+header h1{margin:0; font-size:17px; font-weight:600; letter-spacing:.02em}
+header .sub{color:var(--dim); font-size:12px}
+.badge{font-size:12px; padding:3px 9px; border-radius:999px; border:1px solid var(--line);
+       background:var(--card); color:var(--dim); white-space:nowrap}
+.badge.on{color:var(--accent); border-color:#2c5a3c; background:#16281c}
+.badge.warn{color:var(--warn); border-color:#5a4526; background:#2a2113}
+.spacer{flex:1}
+.btn{
+  font:inherit; font-size:13px; padding:6px 14px; border-radius:7px; cursor:pointer;
+  background:var(--card2); color:var(--text); border:1px solid var(--line);
+}
+.btn:hover{background:#2c323d}
+.btn.primary{background:#1f4c30; border-color:#2f6c45; color:#bdf0cd}
+.btn.primary:hover{background:#256039}
+.btn:disabled{opacity:.4; cursor:default}
+
+/* ---------- 左列 ---------- */
+main{grid-area:main; display:grid; gap:12px; grid-template-rows:minmax(0,1.12fr) minmax(0,1fr); min-height:0}
+.stagewrap{position:relative; padding:10px; display:flex; flex-direction:column; min-height:0}
+canvas{flex:1; width:100%; min-height:0; display:block; border-radius:6px}
+.transport{display:flex; align-items:center; gap:10px; padding-top:8px}
+.transport input[type=range]{flex:1; accent-color:var(--accent)}
+.tlbar{display:flex; height:8px; border-radius:4px; overflow:hidden; gap:1px;
+       margin-bottom:2px; cursor:pointer}
+.tlbar div{height:100%}
+.tlbar div.placed{background:#2f6c45}
+.tlbar div.skip{background:#7a5a22}
+.tlbar div.cur{outline:1px solid var(--accent)}
+.clock{font-family:var(--mono); font-size:12px; color:var(--dim); min-width:104px; text-align:right}
+
+/* ---------- 原理卡 ---------- */
+.principle{padding:10px 14px; overflow:auto; min-height:0}
+.flow{font-size:12px; color:var(--dim); margin-bottom:6px; line-height:1.75}
+.flow b{color:var(--text); font-weight:500}
+.prow{display:grid; grid-template-columns:78px minmax(0,1fr); gap:8px;
+      padding:4px 0; border-bottom:1px dashed #242a33; align-items:baseline}
+.pk{color:var(--dim); font-size:12px}
+.pv{font-size:12.5px; word-break:break-all}
+.pv.mono{font-size:12px; color:#9fd8b0}
+table.axes{width:100%; border-collapse:collapse; margin:6px 0 4px; font-size:11.5px}
+table.axes th{color:var(--dim); font-weight:400; text-align:right; padding:1px 4px; font-size:11px}
+table.axes th:first-child{text-align:left}
+table.axes td{text-align:right; padding:1px 4px; font-family:var(--mono)}
+table.axes td:first-child{text-align:left; font-family:inherit; color:var(--dim)}
+table.axes tr.act td{color:var(--accent)}
+.steps{display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 4px}
+.steps b{font-size:11px; padding:2px 7px; border-radius:5px; background:#232830;
+         color:var(--dim); border:1px solid transparent; font-weight:400}
+.steps b.done{background:#1c2129; color:#79828f}
+.steps b.cur{background:var(--accent); color:#0f1116; border-color:var(--accent); font-weight:600}
+.grip{display:flex; align-items:center; gap:8px; margin:6px 0; font-size:12px}
+.gripbar{position:relative; flex:1; height:9px; background:#232830; border-radius:5px; overflow:hidden}
+.gripbar i{position:absolute; left:0; top:0; bottom:0; background:#4a86e0; transition:width .06s linear}
+.gripbar u{position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--warn)}
+.gear{font-family:var(--mono); font-size:11.5px; color:var(--dim); margin-top:6px; line-height:1.7}
+.strat{display:grid; grid-template-columns:auto 1fr auto; gap:4px 8px; align-items:center;
+       font-size:12px; margin-top:8px}
+.strat .bar{height:7px; background:#232830; border-radius:4px; overflow:hidden}
+.strat .bar i{display:block; height:100%; background:#3f4753}
+.strat .win .bar i{background:var(--accent)}
+.strat .win{color:var(--accent)}
+details{margin-top:10px; font-size:12px; color:var(--dim)}
+details summary{cursor:pointer; color:var(--dim); outline:none}
+details p{margin:6px 0; line-height:1.75}
+details b{color:var(--text); font-weight:500}
+
+/* ---------- 右列 ---------- */
+aside{grid-area:side; display:flex; flex-direction:column; gap:12px; min-height:0; overflow:auto}
+.screenpad{padding:10px}
+.screenpad img{width:100%; border-radius:6px; display:block; background:#12141a}
+.metrics{padding:10px 14px; display:grid; grid-template-columns:1fr 1fr; gap:8px 12px}
+.metric .k{font-size:11px; color:var(--dim)}
+.metric .v{font-size:19px; font-family:var(--mono); letter-spacing:.02em}
+.metric .v small{font-size:11px; color:var(--dim); font-family:inherit}
+.params{padding:10px 14px}
+.pfield{display:grid; grid-template-columns:96px 1fr 52px; gap:8px; align-items:center;
+        font-size:12px; margin-bottom:7px}
+.pfield input[type=range]{width:100%; accent-color:var(--blue)}
+.pfield .num{font-family:var(--mono); text-align:right; color:var(--text)}
+.pfield .k{color:var(--dim)}
+.queue{padding:10px 14px; min-height:0}
+table.q{width:100%; border-collapse:collapse; font-size:12px}
+table.q th{color:var(--dim); font-weight:400; text-align:left; padding:3px 5px;
+           position:sticky; top:0; background:var(--panel); font-size:11px}
+table.q td{padding:3px 5px; border-top:1px solid #232830}
+table.q tr.cur{background:#1b2b21}
+table.q tr.cur td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+table.q tr.done td{color:#6d7683}
+.tag{font-size:11px; padding:1px 6px; border-radius:4px; background:#232830; color:var(--dim)}
+.tag.ok{background:#1c3826; color:#7dd99b}
+.tag.ng{background:#3a2c14; color:#e8b25e}
+.err{color:var(--warn); font-size:12px; margin-top:6px}
+@media (max-width:1080px){
+  .app{grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto auto;
+       grid-template-areas:"head" "main" "side"; height:auto; overflow:auto}
+  body{overflow:auto}
+  main{grid-template-rows:520px auto}
+}
+</style>
+
+<div class="app">
+  <header class="card">
+    <h1>智能分拣装置</h1>
+    <span class="sub">软件工作台</span>
+    <span class="badge" id="badge-mode">仿真</span>
+    <span class="badge" id="badge-cal">未标定</span>
+    <span class="spacer"></span>
+    <span class="sub" id="source"></span>
+    <button class="btn" id="btn-live">实跑一轮</button>
+    <button class="btn primary" id="btn-play">▶ 播放</button>
+  </header>
+
+  <main>
+    <section class="card stagewrap">
+      <canvas id="stage"></canvas>
+      <div class="transport">
+        <div class="tlbar" id="tlbar"></div>
+      </div>
+      <div class="transport">
+        <button class="btn" id="btn-rewind" title="回到开头">⏮</button>
+        <input type="range" id="scrub" min="0" max="100" value="0" step="0.001">
+        <span class="clock"><span id="t-now">0.0</span> / <span id="t-total">0.0</span> s</span>
+        <label class="sub">倍速
+          <select class="btn" id="rate" style="padding:3px 6px">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+            <option value="8">8×</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="card principle">
+      <h2>原理 · 内部实况</h2>
+      <div class="flow">
+        <b>相机</b> → 单应 H⁻¹ → <b>托盘 mm</b> → 形状/颜色分类 → <b>整机 mm</b>
+        → 排程 → <b>串口协议</b> → MCU 脉冲
+      </div>
+
+      <div class="prow"><span class="pk">当前指令</span><span class="pv mono" id="p-cmd">—</span></div>
+      <div class="prow"><span class="pk">这条怎么来的</span><span class="pv" id="p-chain">—</span></div>
+      <div class="prow"><span class="pk">动作序列</span><span class="pv"><div class="steps" id="p-steps"></div></span></div>
+
+      <table class="axes">
+        <thead><tr><th>轴</th><th>位置 mm</th><th>步数</th><th>步/mm</th><th>速度 mm/s</th></tr></thead>
+        <tbody id="p-axes"></tbody>
+      </table>
+
+      <div class="grip">
+        <span class="pk">夹爪判据</span>
+        <div class="gripbar" id="gripbar"><i style="width:0"></i><u id="gripmark"></u></div>
+        <span class="mono" id="gripval">—</span>
+      </div>
+      <div class="sub" style="font-size:11.5px" id="gripwhy">—</div>
+
+      <div class="gear" id="p-gear"></div>
+
+      <div class="strat" id="p-strat"></div>
+
+      <details>
+        <summary>为什么是这样设计的</summary>
+        <p><b>为什么接收音机两颗芯片：</b>树莓派跑 Linux，不是实时系统——它决定"去哪"，
+        但发脉冲的时序不能交给它。STM32 用硬件定时器决定"怎么去"，树莓派只发
+        <span class="mono">GOTO 205.0 45.0</span> 这样的一行字。</p>
+        <p><b>为什么夹爪不用力传感器：</b>步进驱动器本身能检测堵转。空夹会一直合到底，
+        夹到工件会停在工件宽度处，所以<b>看停在哪</b>就能判断，省一路传感器和一根线。
+        力矩上限在 MCU 侧限制。</p>
+        <p><b>为什么排程不是简单的按类别分组：</b>赛规只要求同形同色进同一个盒子，
+        不要求同类连着做完。所以这是个旅行商问题，三种排法都真算一遍，取最短的那个。
+        </p>
+      </details>
+    </section>
+  </main>
+
+  <aside>
+    <section class="card screenpad">
+      <h2>屏幕 · 480×320（与真机同一份渲染代码）</h2>
+      <img id="screen" alt="屏幕帧">
+    </section>
+
+    <section class="card metrics">
+      <div class="metric"><div class="k">整轮节拍</div>
+        <div class="v"><span id="m-total">—</span><small> s</small></div></div>
+      <div class="metric"><div class="k">已入盒</div>
+        <div class="v"><span id="m-placed">—</span><small> 件</small></div></div>
+      <div class="metric"><div class="k">跳过</div>
+        <div class="v"><span id="m-skip">—</span><small> 件</small></div></div>
+      <div class="metric"><div class="k">行走距离</div>
+        <div class="v"><span id="m-cost">—</span><small> mm</small></div></div>
+    </section>
+
+    <section class="card params">
+      <h2>参数（改完点重新生成）</h2>
+      <div class="pfield"><span class="k">场景种子</span>
+        <input type="range" id="f-seed" min="0" max="30" value="0"><span class="num" id="v-seed">0</span></div>
+      <div class="pfield"><span class="k">每类件数</span>
+        <input type="range" id="f-per" min="1" max="4" value="2"><span class="num" id="v-per">2</span></div>
+      <div class="pfield"><span class="k">X 速度</span>
+        <input type="range" id="f-xs" min="50" max="400" step="10" value="200"><span class="num" id="v-xs">200</span></div>
+      <div class="pfield"><span class="k">Y 速度</span>
+        <input type="range" id="f-ys" min="50" max="400" step="10" value="200"><span class="num" id="v-ys">200</span></div>
+      <div class="pfield"><span class="k">Z 速度</span>
+        <input type="range" id="f-zs" min="50" max="300" step="10" value="100"><span class="num" id="v-zs">100</span></div>
+      <div class="pfield"><span class="k">Z 安全高度</span>
+        <input type="range" id="f-zsafe" min="10" max="70" step="1" value="45"><span class="num" id="v-zsafe">45</span></div>
+      <div class="pfield"><span class="k">注入空夹</span>
+        <input type="text" id="f-inject" placeholder="如 2,5" class="btn"
+               style="width:100%;padding:4px 8px;text-align:left;font-family:var(--mono)">
+        <span class="num"></span></div>
+      <button class="btn primary" id="btn-regen" style="width:100%;margin-top:6px">重新生成</button>
+      <div class="err" id="err"></div>
+    </section>
+
+    <section class="card queue">
+      <h2>工件队列</h2>
+      <table class="q">
+        <thead><tr><th>序</th><th>名称</th><th>盒</th><th>用时</th><th>结果</th></tr></thead>
+        <tbody id="qbody"></tbody>
+      </table>
+    </section>
+  </aside>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const AXES = ["x", "y", "z", "grip"];
+const AXIS_LABEL = { x: "X", y: "Y", z: "Z", grip: "夹爪" };
+
+const S = {
+  scene: null, byAxis: { x: [], y: [], z: [], grip: [] },
+  items: [], cmds: [], total: 0,
+  t: 0, playing: false, rate: 1,
+  live: false, screenKey: "", es: null,
+};
+
+// ---------------------------------------------------------------- 数据
+async function loadScene() {
+  const r = await fetch("/api/scene");
+  applyScene(await r.json());
+}
+
+function applyScene(sc) {
+  S.scene = sc;
+  S.total = sc.total_s || 0;
+  S.items = sc.items || [];
+  S.cmds = sc.commands || [];
+  S.byAxis = { x: [], y: [], z: [], grip: [] };
+  for (const m of (sc.motions || [])) (S.byAxis[m[0]] || (S.byAxis[m[0]] = [])).push(m);
+  for (const a of AXES) S.byAxis[a].sort((p, q) => p[3] - q[3]);
+  S.t = 0; S.playing = false;
+  $("badge-mode").textContent = sc.mode === "serial" ? "实机串口" : "仿真";
+  $("badge-mode").className = "badge" + (sc.mode === "serial" ? " on" : "");
+  $("badge-cal").textContent = sc.calibrated ? "已标定" : "未标定 · 解析估算";
+  $("badge-cal").className = "badge" + (sc.calibrated ? " on" : " warn");
+  $("source").textContent = sc.source || "";
+  $("m-total").textContent = (sc.total_s || 0).toFixed(1);
+  $("m-placed").textContent = sc.placed ?? 0;
+  $("m-skip").textContent = sc.skipped_n ?? 0;
+  $("m-cost").textContent = Math.round(sc.plan ? sc.plan.cost_mm : 0);
+  $("t-total").textContent = (sc.total_s || 0).toFixed(1);
+  syncParamInputs(sc);
+  buildTimeline(); renderQueue(); renderStrategies(); updateHud(); draw();
+}
+
+function syncParamInputs(sc) {
+  const a = sc.axes || {};
+  if (!a.x) return;
+  $("f-seed").value = sc.seed ?? 0; $("v-seed").textContent = sc.seed ?? 0;
+  $("f-per").value = sc.per_class ?? 2; $("v-per").textContent = sc.per_class ?? 2;
+  $("f-xs").value = a.x.speed; $("v-xs").textContent = a.x.speed;
+  $("f-ys").value = a.y.speed; $("v-ys").textContent = a.y.speed;
+  $("f-zs").value = a.z.speed; $("v-zs").textContent = a.z.speed;
+  $("f-zsafe").value = sc.process.z_safe; $("v-zsafe").textContent = sc.process.z_safe;
+  $("f-inject").value = (sc.inject || []).join(",");
+}
+
+function busiestSeconds() { return S.total || 1; }
+
+// ---------------------------------------------------------------- 播放
+function posAt(axis, t) {
+  const arr = S.byAxis[axis] || [];
+  let last = null;
+  for (const m of arr) {
+    if (m[3] > t) break;
+    if (t <= m[3] + m[4]) {
+      const f = m[4] > 1e-9 ? (t - m[3]) / m[4] : 1;
+      return m[1] + (m[2] - m[1]) * f;
+    }
+    last = m;
+  }
+  return last ? last[2] : (arr.length ? arr[0][1] : 0);
+}
+
+function itemAt(t) {
+  for (const it of S.items) if (t >= it.t_start && t < it.t_end) return it;
+  return null;
+}
+
+// 结果帧在屏上多停一会儿，纯粹为了看得清；真机的帧序以 out/demo/frames 为准
+const LINGER = 0.35;
+function resultAt(t) {
+  for (const it of S.items) {
+    if (t >= it.t_end && t < it.t_end + LINGER) return it;
+  }
+  return null;
+}
+
+function screenState(t) {
+  if (!S.items.length) return { pos: 1, phase: "ready" };
+  if (t >= S.total) return { pos: S.items.length, phase: "done" };
+  const res = resultAt(t);
+  if (res) return { pos: res.pos, phase: res.held ? "placed" : "skip" };
+  const it = itemAt(t);
+  if (it) return { pos: it.pos, phase: "moving" };
+  return { pos: 1, phase: "ready" };
+}
+
+let lastTs = 0;
+function frame(ts) {
+  const dt = lastTs ? Math.min((ts - lastTs) / 1000, 0.25) : 0;
+  lastTs = ts;
+  if (S.playing && !S.live) {
+    S.t += dt * S.rate;
+    if (S.t >= S.total) { S.t = S.total; pause(); }
+  }
+  draw(); updateHud();
+  requestAnimationFrame(frame);
+}
+
+function play() {
+  if (S.t >= S.total) S.t = 0;
+  S.playing = true; $("btn-play").textContent = "⏸ 暂停";
+}
+function pause() { S.playing = false; $("btn-play").textContent = "▶ 播放"; }
+function toggle() { S.playing ? pause() : play(); }
+
+function seek(t) {
+  S.t = Math.max(0, Math.min(t, S.total));
+  updateHud(); draw();
+}
+
+// ---------------------------------------------------------------- 画布
+const canvas = $("stage");
+const ctx = canvas.getContext("2d");
+
+function draw() {
+  const sc = S.scene; if (!sc) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  if (canvas.width !== Math.round(W * dpr) || canvas.height !== Math.round(H * dpr)) {
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "#151920";
+  ctx.fillRect(0, 0, W, H);
+
+  const M = sc.machine, padL = 34, padR = 26, padT = 20, padB = 26;
+  const s = Math.min((W - padL - padR) / M.x_max, (H - padT - padB) / M.y_max);
+  const ox = padL + ((W - padL - padR) - M.x_max * s) / 2;
+  const oy = padT + ((H - padT - padB) - M.y_max * s) / 2;
+  const P = (x, y) => [ox + x * s, oy + y * s];
+
+  // -- 网格 --------------------------------------------------------------
+  ctx.strokeStyle = "#1c222b"; ctx.lineWidth = 1;
+  for (let x = 0; x <= M.x_max; x += 20) {
+    const [px, py0] = P(x, 0), [, py1] = P(x, M.y_max);
+    ctx.beginPath(); ctx.moveTo(px, py0); ctx.lineTo(px, py1); ctx.stroke();
+  }
+  for (let y = 0; y <= M.y_max; y += 20) {
+    const [px0, py] = P(0, y), [px1] = P(M.x_max, y);
+    ctx.beginPath(); ctx.moveTo(px0, py); ctx.lineTo(px1, py); ctx.stroke();
+  }
+
+  // -- 托盘 --------------------------------------------------------------
+  const T = sc.tray;
+  const [tx0, ty0] = P(T.x0, T.y0), [tx1, ty1] = P(T.x0 + T.w, T.y0 + T.h);
+  ctx.fillStyle = "#1b212a"; ctx.strokeStyle = "#38414e"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.roundRect(tx0, ty0, tx1 - tx0, ty1 - ty0, 5);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#59616e"; ctx.font = "11px Consolas, monospace";
+  ctx.fillText("托盘 " + T.w + "×" + T.h, tx0, ty0 - 6);
+
+  // -- 料盒 --------------------------------------------------------------
+  const active = itemAt(S.t);
+  const nextBin = active ? active.bin : null;
+  const BIN = 30;
+  for (const [id, xy] of Object.entries(sc.bins)) {
+    const [cx, cy] = P(xy[0], xy[1]);
+    const half = BIN * s / 2;
+    const isNext = nextBin && Math.abs(nextBin[0] - xy[0]) < 0.01 && Math.abs(nextBin[1] - xy[1]) < 0.01;
+    const cnt = S.items.filter(i => i.category === id && i.held && i.t_end <= S.t).length;
+    ctx.beginPath(); ctx.roundRect(cx - half, cy - half, half * 2, half * 2, 4);
+    ctx.fillStyle = isNext ? "#23361f" : "#1b212a";
+    ctx.fill();
+    ctx.strokeStyle = isNext ? "#56c878" : "#38414e";
+    ctx.lineWidth = isNext ? 2 : 1.2; ctx.stroke();
+    ctx.fillStyle = isNext ? "#9fe8b5" : "#7b8492";
+    ctx.font = "bold 12px Consolas, monospace"; ctx.textAlign = "center";
+    ctx.fillText(id, cx, cy - 1);
+    ctx.font = "10px Consolas, monospace"; ctx.fillStyle = "#5c6572";
+    ctx.fillText(cnt ? cnt + " 件" : "盒", cx, cy + 12);
+    ctx.textAlign = "left";
+  }
+
+  // -- 路径（整条淡淡的，当前这一件高亮）--------------------------------
+  ctx.setLineDash([3, 4]); ctx.lineWidth = 1;
+  ctx.strokeStyle = "#2b333f";
+  for (const it of S.items) {
+    const [ax, ay] = P(it.pick[0], it.pick[1]);
+    const [bx, by] = P(it.bin[0], it.bin[1]);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  if (active) {
+    const [ax, ay] = P(active.pick[0], active.pick[1]);
+    const [bx, by] = P(active.bin[0], active.bin[1]);
+    ctx.strokeStyle = "rgba(86,200,120,.55)"; ctx.lineWidth = 1.6;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // -- 工件 --------------------------------------------------------------
+  const detByPos = {};
+  for (const it of S.items) detByPos[it.pos] = it;
+  const activePos = active ? active.pos : -1;
+  for (const d of (sc.detections || [])) {
+    if (!d.poly || d.poly.length < 3) continue;
+    const owner = S.items.find(i => i.index === d.idx);
+    const picked = owner && owner.held && S.t >= (owner.hold_from ?? 1e9);
+    if (picked) continue;                       // 已经被搬走了
+    const isActivePick = active && owner && active.pos === owner.pos;
+    ctx.beginPath();
+    d.poly.forEach((pt, i) => {
+      const [px, py] = P(pt[0], pt[1]);
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    });
+    ctx.closePath();
+    ctx.globalAlpha = d.ok ? 0.85 : 0.35;
+    ctx.fillStyle = d.hex || "#8a93a6"; ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = isActivePick ? "#ffffff" : (d.ok ? "rgba(255,255,255,.35)" : "#e2594c");
+    ctx.lineWidth = isActivePick ? 2 : 1; ctx.stroke();
+    if (!d.ok) {
+      const [px, py] = P(d.machine_xy[0], d.machine_xy[1]);
+      ctx.strokeStyle = "#e2594c"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(px - 5, py - 5); ctx.lineTo(px + 5, py + 5);
+      ctx.moveTo(px + 5, py - 5); ctx.lineTo(px - 5, py + 5); ctx.stroke();
+    }
+  }
+
+  // -- 龙门 --------------------------------------------------------------
+  const px = posAt("x", S.t), py = posAt("y", S.t), pz = posAt("z", S.t);
+  const [cx, cy] = P(px, py);
+  const [rx0] = P(0, 0), [rx1] = P(M.x_max, 0);
+  const [, ry0] = P(0, 0), [, ry1] = P(0, M.y_max);
+
+  ctx.strokeStyle = "#2a313b"; ctx.lineWidth = 5; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(rx0, ry0); ctx.lineTo(rx0, ry1);
+  ctx.moveTo(rx1, ry0); ctx.lineTo(rx1, ry1); ctx.stroke();      // 两侧立轨
+  ctx.strokeStyle = "#3d4653"; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(rx0, cy); ctx.lineTo(rx1, cy); ctx.stroke();  // 横梁随 Y 移动
+  ctx.lineCap = "butt";
+
+  // 高度提示：Z 越大（越接近工件）阴影环越小
+  const zmax = (sc.axes.z && sc.axes.z.max_mm) || 80;
+  const zf = Math.max(0, Math.min(1, pz / zmax));
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + 4, 16 - 10 * (1 - zf), 6 - 3 * (1 - zf), 0, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fill();
+
+  // 小车 + 夹爪
+  ctx.fillStyle = pz < 8 ? "#3f7f56" : "#2f3945";
+  ctx.strokeStyle = pz < 8 ? "#56c878" : "#6a7481";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.roundRect(cx - 11, cy - 9, 22, 18, 4); ctx.fill(); ctx.stroke();
+
+  const gap = Math.max(2, Math.min(1, posAt("grip", S.t) / (sc.process.grip_open || 35))) * 13;
+  ctx.strokeStyle = "#c9d2de"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(cx - gap, cy + 9); ctx.lineTo(cx - gap, cy + 17);
+  ctx.moveTo(cx + gap, cy + 9); ctx.lineTo(cx + gap, cy + 17);
+  ctx.stroke(); ctx.lineCap = "butt";
+
+  // 夹在爪里的工件
+  const carry = S.items.find(i => i.hold_from != null && S.t >= i.hold_from &&
+                                  (i.hold_to == null || S.t < i.hold_to));
+  if (carry) {
+    const d = (sc.detections || []).find(o => o.idx === carry.index);
+    ctx.fillStyle = (d && d.hex) || "#b9c2ce";
+    ctx.beginPath(); ctx.arc(cx, cy + 15, Math.max(3.2, gap * 0.62), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  // 四轴读数（放在画布左下角，不挡工件）
+  ctx.fillStyle = "#6b7481"; ctx.font = "11px Consolas, monospace";
+  ctx.fillText(`X ${px.toFixed(1)}　Y ${py.toFixed(1)}　Z ${pz.toFixed(1)}　mm`, 10, H - 8);
+}
+
+// ---------------------------------------------------------------- HUD
+function updateHud() {
+  const sc = S.scene; if (!sc) return;
+  $("t-now").textContent = S.t.toFixed(1);
+  if (!S.live) $("scrub").value = S.total ? (S.t / S.total) * 100 : 0;
+
+  // 时间轴分段
+  document.querySelectorAll("#tlbar div").forEach(el => {
+    const p = +el.dataset.pos;
+    el.classList.toggle("cur", p === (itemAt(S.t) || {}).pos);
+  });
+
+  // 屏幕
+  const ss = screenState(S.t);
+  const key = ss.pos + "|" + ss.phase;
+  if (key !== S.screenKey) {
+    S.screenKey = key;
+    $("screen").src = `/api/screen.png?pos=${ss.pos}&phase=${ss.phase}`;
+  }
+
+  // -- 原理 ------------------------------------------------------------
+  const cmd = lastCmd(S.t);
+  $("p-cmd").textContent = cmd ? cmd.line : "—";
+
+  // 原理面板跟着屏幕说同一件事：屏幕上显示哪一件，这里就解释哪一件
+  const it = S.items.find(o => o.pos === ss.pos) || null;
+  if (it) {
+    const d = (sc.detections || []).find(o => o.idx === it.index);
+    if (d) {
+      $("p-chain").innerHTML =
+        `像素 <b>(${d.cx_px}, ${d.cy_px})</b> → 托盘 ` +
+        `<b>(${d.cx_mm}, ${d.cy_mm})</b> mm → 整机 ` +
+        `<b>(${d.machine_xy[0]}, ${d.machine_xy[1]})</b> mm　` +
+        `<span style="color:${d.hex}">${d.label}</span>`;
+    }
+    renderSteps(it);
+  } else {
+    $("p-chain").textContent = "—";
+    $("p-steps").innerHTML = "";
+  }
+
+  // 四轴表
+  const moving = AXES.filter(a => isMoving(a, S.t));
+  const rows = AXES.map(a => {
+    const ax = sc.axes[a]; if (!ax) return "";
+    const p = posAt(a, S.t);
+    const cls = moving.includes(a) ? ' class="act"' : "";
+    return `<tr${cls}><td>${AXIS_LABEL[a]}</td><td>${p.toFixed(1)}</td>` +
+           `<td>${Math.round(p * ax.steps_per_mm).toLocaleString()}</td>` +
+           `<td>${ax.steps_per_mm}</td><td>${ax.speed}</td></tr>`;
+  }).join("");
+  $("p-axes").innerHTML = rows;
+
+  // 夹爪
+  const g = posAt("grip", S.t);
+  const open = sc.process.grip_open, holdmin = sc.process.grip_hold_min;
+  $("gripbar").firstElementChild.style.width = Math.min(100, (g / open) * 100) + "%";
+  $("gripmark").style.left = (holdmin / open) * 100 + "%";
+  $("gripval").textContent = g.toFixed(1) + " mm";
+  const carrying = S.items.find(i => i.hold_from != null && S.t >= i.hold_from &&
+                                     (i.hold_to == null || S.t < i.hold_to));
+  $("gripwhy").innerHTML = carrying
+    ? `停位 ${g.toFixed(1)} ≥ 判据 ${holdmin} → <b style="color:var(--accent)">判定夹到</b>，走料盒`
+    : `判据：停位 ≥ ${holdmin} mm 才算夹到（橙色刻度）。空夹会一直合到 ${sc.process.grip_close} mm`;
+
+  // 齿轮换算：跟着当前在动的那根轴
+  const ga = moving[0] && sc.axes[moving[0]] ? moving[0] : "x";
+  const ax = sc.axes[ga];
+  $("p-gear").textContent =
+    `${AXIS_LABEL[ga]} 轴　d = m·z = ${ax.module} × ${ax.teeth} = ${(ax.module * ax.teeth).toFixed(1)} mm` +
+    `　L = πd/i = ${ax.mm_per_rev} mm/转` +
+    `　S = ${ax.steps_per_rev} × ${ax.microstep} / ${ax.mm_per_rev} = ${ax.steps_per_mm} 步/mm`;
+
+  // 队列高亮
+  document.querySelectorAll("#qbody tr").forEach(tr => {
+    tr.classList.toggle("cur", +tr.dataset.pos === ss.pos);
+    tr.classList.toggle("done", +tr.dataset.pos < ss.pos);
+  });
+}
+
+function lastCmd(t) {
+  let last = null;
+  for (const c of S.cmds) { if (c.t > t) break; last = c; }
+  return last;
+}
+
+// 工艺顺序写在 core/sequence.py 里，这里只是把它摆在台面上
+const STEP_TEXT = {
+  home: () => "回零",
+  settle: (a) => "稳 " + a[0] + "s",
+  check: () => "判定",
+  display: () => "刷屏",
+};
+function stepText(s) {
+  const p = (S.scene && S.scene.process) || {};
+  if (s.k === "goto") return "平移";
+  if (s.k === "z") return "Z→" + s.a[0];
+  if (s.k === "grip") return s.a[0] >= (p.grip_open ?? 35) - 0.01 ? "张爪" : "闭合";
+  const f = STEP_TEXT[s.k];
+  return f ? f(s.a) : s.k;
+}
+function stepTitle(s) {
+  return `t=${s.t.toFixed(2)}s　${s.k}(${s.a.join(", ")})`;
+}
+function renderSteps(it) {
+  const steps = it.steps || [];
+  let cur = -1;
+  for (let i = 0; i < steps.length; i++) if (steps[i].t <= S.t) cur = i;
+  $("p-steps").innerHTML = steps.map((s, i) => {
+    const cls = i === cur ? "cur" : (i < cur ? "done" : "");
+    return `<b class="${cls}" title="${stepTitle(s)}">${stepText(s)}</b>`;
+  }).join("");
+}
+function isMoving(axis, t) {
+  return (S.byAxis[axis] || []).some(m => t > m[3] && t < m[3] + m[4] - 1e-9);
+}
+
+// ---------------------------------------------------------------- 列表
+function buildTimeline() {
+  const bar = $("tlbar"); bar.innerHTML = "";
+  if (!S.total) return;
+  for (const it of S.items) {
+    const d = document.createElement("div");
+    d.dataset.pos = it.pos;
+    d.className = it.held ? "placed" : "skip";
+    d.style.width = ((it.t_end - it.t_start) / S.total * 100) + "%";
+    d.title = `#${String(it.pos).padStart(2, "0")} ${it.name}`;
+    bar.appendChild(d);
+  }
+}
+
+function renderQueue() {
+  const sc = S.scene;
+  $("qbody").innerHTML = (S.items || []).map(it => {
+    const tag = it.held
+      ? `<span class="tag ok">入盒</span>`
+      : `<span class="tag ng">跳过</span>`;
+    return `<tr data-pos="${it.pos}"><td>${String(it.pos).padStart(2, "0")}</td>` +
+           `<td>${it.name}</td><td>${it.category}</td>` +
+           `<td class="mono">${(it.t_end - it.t_start).toFixed(1)}</td><td>${tag}</td></tr>`;
+  }).join("");
+}
+
+function renderStrategies() {
+  const sc = S.scene, p = sc.plan;
+  if (!p || !p.costs) { $("p-strat").innerHTML = ""; return; }
+  const keys = ["detect", "nn", "class"];
+  const name = { detect: "按检出顺序", nn: "全局最近邻", class: "同类一次做完" };
+  const max = Math.max(...keys.map(k => p.costs[k] || 0));
+  $("p-strat").innerHTML = keys.filter(k => p.costs[k] != null).map(k => {
+    const v = p.costs[k], win = k === p.strategy;
+    return `<span class="${win ? "win" : ""}">${name[k]}</span>` +
+           `<span class="bar ${win ? "win" : ""}"><i style="width:${(v / max) * 100}%"></i></span>` +
+           `<span class="mono ${win ? "win" : ""}">${Math.round(v)}</span>`;
+  }).join("");
+}
+
+// ---------------------------------------------------------------- 交互
+$("btn-play").onclick = toggle;
+$("btn-rewind").onclick = () => { seek(0); };
+$("scrub").oninput = (e) => { pause(); seek(+e.target.value / 100 * S.total); };
+$("rate").onchange = (e) => { S.rate = +e.target.value; };
+$("tlbar").onclick = (e) => {
+  const el = e.target.closest("div[data-pos]"); if (!el) return;
+  const it = S.items.find(i => i.pos === +el.dataset.pos);
+  if (it) { pause(); seek(it.t_start); }
+};
+
+for (const [id, out, fn] of [
+  ["f-seed", "v-seed", v => v], ["f-per", "v-per", v => v],
+  ["f-xs", "v-xs", v => v], ["f-ys", "v-ys", v => v],
+  ["f-zs", "v-zs", v => v], ["f-zsafe", "v-zsafe", v => v],
+]) {
+  $(id).oninput = (e) => { $(out).textContent = fn(e.target.value); };
+}
+
+$("btn-regen").onclick = async () => {
+  $("err").textContent = "";
+  $("btn-regen").disabled = true;
+  const params = {
+    seed: $("f-seed").value, per_class: $("f-per").value,
+    x_speed: $("f-xs").value, y_speed: $("f-ys").value,
+    z_speed: $("f-zs").value, z_safe: $("f-zsafe").value,
+    inject: $("f-inject").value || "",
+  };
+  try {
+    const r = await fetch("/api/reload?" + new URLSearchParams(params));
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || "生成失败");
+    applyScene(j);
+  } catch (err) {
+    $("err").textContent = err.message;
+  } finally {
+    $("btn-regen").disabled = false;
+  }
+};
+
+$("btn-live").onclick = async () => {
+  if (S.live) { stopLive(); return; }
+  $("err").textContent = "";
+  const inject = $("f-inject").value || "";
+  // 真机上等待是由 MCU 做的，倍速只能影响仿真；接串口时固定按 1× 跑
+  const speed = (S.scene && S.scene.mode === "serial") ? 1 : S.rate;
+  const r = await fetch("/api/live/start?" + new URLSearchParams({ inject, speed: String(speed) }));
+  const j = await r.json();
+  if (!j.ok) { $("err").textContent = j.error || "启动失败"; return; }
+  startLive();
+};
+
+function startLive() {
+  S.live = true; S.playing = false;
+  S.items = []; S.cmds = []; S.byAxis = { x: [], y: [], z: [], grip: [] };
+  S.screenKey = ""; S.total = 0; S.t = 0;
+  buildTimeline(); renderQueue();
+  $("btn-live").textContent = "■ 停止";
+  $("badge-mode").textContent = "实跑中";
+  $("badge-mode").className = "badge on";
+  $("btn-play").disabled = true;
+  S.es = new EventSource("/api/live/events");
+  S.es.onmessage = (e) => {
+    const ev = JSON.parse(e.data);
+    if (ev.motions) for (const m of ev.motions) {
+      (S.byAxis[m[0]] || (S.byAxis[m[0]] = [])).push(m);
+    }
+    if (ev.commands) S.cmds.push(...ev.commands);
+    if (ev.items) { S.items.push(...ev.items); renderQueue(); buildTimeline(); }
+    if (typeof ev.t === "number") { S.t = ev.t; S.total = Math.max(S.total, ev.t); }
+    if (ev.end) {
+      S.total = ev.total_s || S.t;
+      $("t-total").textContent = S.total.toFixed(1);
+      $("m-total").textContent = S.total.toFixed(1);
+      if (ev.error) $("err").textContent = ev.error;
+      stopLive();
+    }
+  };
+  S.es.onerror = () => { if (S.live) stopLive(); };
+}
+
+function stopLive() {
+  if (S.es) { S.es.close(); S.es = null; }
+  S.live = false;
+  $("btn-live").textContent = "实跑一轮";
+  $("btn-play").disabled = false;
+  const sc = S.scene;
+  if (sc) {
+    $("badge-mode").textContent = sc.mode === "serial" ? "实机串口" : "仿真";
+    $("badge-mode").className = "badge" + (sc.mode === "serial" ? " on" : "");
+  }
+}
+
+window.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  if (e.code === "Space") { e.preventDefault(); toggle(); }
+  if (e.code === "ArrowRight") seek(S.t + 0.5);
+  if (e.code === "ArrowLeft") seek(S.t - 0.5);
+  if (e.code === "Home") seek(0);
+});
+
+// ---------------------------------------------------------------- 启动
+loadScene().then(() => requestAnimationFrame(frame));
+</script>

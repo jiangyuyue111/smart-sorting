@@ -90,6 +90,8 @@
 | [docs/技术方案-v3.0.md](docs/技术方案-v3.0.md) | **工程实现版**：架构、动作序列、串口协议、显示实现、开发计划 W1–W7 |
 | [docs/技术选型方案.html](docs/技术选型方案.html) | **对老师/文档 A 版**：论证、选型、BOM、风险。浏览器打开 |
 | [docs/软件方案.md](docs/软件方案.md) | **软件落地版**：线程模型、模块划分、串口协议、状态机、降级矩阵、无板开发 |
+| [docs/运行说明.md](docs/运行说明.md) | **怎么跑/怎么演示**：从环境检查到每张图是什么，不需要懂代码 |
+| [docs/答辩口径.md](docs/答辩口径.md) | **怎么讲给评委**：90 秒开场、必被问到的三个问题、四条不能说 |
 | [sorting/](sorting/) | **上位机代码（S1 骨架已落地）**：协议/链路/状态机/动作序列 + 单元测试，无板可跑 |
 | [docs/智能分拣装置_DOBOT机械臂改造方案与调研清单.html](docs/智能分拣装置_DOBOT机械臂改造方案与调研清单.html) | 机械臂选型与改造调研 |
 | [docs/智能分拣设备-概念效果图.png](docs/智能分拣设备-概念效果图.png) | 概念效果图 |
@@ -115,13 +117,15 @@ S1 骨架，**不需要板子**就能跑：
 
 ```powershell
 cd D:\智能分拣
-python -m unittest discover -s sorting\tests -t .   # 32 个单元测试
+python -m sorting.app.studio                        # 工作台：浏览器里看机器一件一件动
+python -m unittest discover -s sorting\tests -t .   # 124 个单元测试
 python -m sorting.app.main --demo                    # 模拟 MCU 跑一遍完整工序
 python -m sorting.app.main --port COM3 --demo        # 接真机（需要 STM32 先烧好固件）
 ```
 
 | 模块 | 职责 |
 |---|---|
+| `sorting/app/studio.py` | **工作台**：本地 HTTP 服务 + 本地网页。预演和实机共用一条时间轴 |
 | `sorting/core/protocol.py` | UART 行协议编解码。**契约在这里，改协议先改它和它的测试** |
 | `sorting/core/link.py` | `SerialLink`（真串口）/ `MockLink`（模拟 MCU，带物理量耗时）/ `Session`（指令→OK→DONE） |
 | `sorting/core/machine.py` | 顶层状态机 BOOT→SELF_TEST→STANDBY→ARMED→RUNNING→FINISH，FAULT 可从任意态进入 |
